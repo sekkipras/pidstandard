@@ -96,6 +96,12 @@ namespace PIDStandardization.UI.Views
             {
                 DownstreamEquipmentComboBox.SelectedValue = equipment.DownstreamEquipmentId.Value;
             }
+
+            // Drawing assignment
+            if (equipment.DrawingId.HasValue)
+            {
+                SourceDrawingComboBox.SelectedValue = equipment.DrawingId.Value;
+            }
         }
 
         private async void LoadEquipmentListAsync()
@@ -105,6 +111,12 @@ namespace PIDStandardization.UI.Views
 
             UpstreamEquipmentComboBox.ItemsSource = allEquipment;
             DownstreamEquipmentComboBox.ItemsSource = allEquipment;
+
+            // Load drawings for this project
+            var allDrawings = await _unitOfWork.Drawings
+                .FindAsync(d => d.ProjectId == _project.ProjectId);
+
+            SourceDrawingComboBox.ItemsSource = allDrawings;
         }
 
         private async void ValidateTag_Click(object sender, RoutedEventArgs e)
@@ -235,6 +247,9 @@ namespace PIDStandardization.UI.Views
                     equipment.UpstreamEquipmentId = (Guid?)UpstreamEquipmentComboBox.SelectedValue;
                     equipment.DownstreamEquipmentId = (Guid?)DownstreamEquipmentComboBox.SelectedValue;
 
+                    // Drawing assignment
+                    equipment.DrawingId = (Guid?)SourceDrawingComboBox.SelectedValue;
+
                     // Process parameters
                     equipment.OperatingPressure = ParseDecimal(OperatingPressureTextBox.Text);
                     equipment.OperatingPressureUnit = OperatingPressureUnitComboBox.Text;
@@ -272,6 +287,9 @@ namespace PIDStandardization.UI.Views
                         // Connectivity (optional fields)
                         UpstreamEquipmentId = (Guid?)UpstreamEquipmentComboBox.SelectedValue,
                         DownstreamEquipmentId = (Guid?)DownstreamEquipmentComboBox.SelectedValue,
+
+                        // Drawing assignment (optional)
+                        DrawingId = (Guid?)SourceDrawingComboBox.SelectedValue,
 
                         // Process parameters (optional fields)
                         OperatingPressure = ParseDecimal(OperatingPressureTextBox.Text),

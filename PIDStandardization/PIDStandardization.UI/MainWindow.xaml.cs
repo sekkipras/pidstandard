@@ -139,6 +139,13 @@ namespace PIDStandardization.UI
         }
 
         // Help Menu Methods
+        private void UserGuide_Click(object sender, RoutedEventArgs e)
+        {
+            var userGuideDialog = new UserGuideDialog();
+            userGuideDialog.Owner = this;
+            userGuideDialog.ShowDialog();
+        }
+
         private void WelcomeScreen_Click(object sender, RoutedEventArgs e)
         {
             var welcomeDialog = new WelcomeDialog();

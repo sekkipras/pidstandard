@@ -1,0 +1,417 @@
+<Window x:Class="PIDStandardization.UI.Views.UserGuideDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="P&amp;ID Standardization - User Guide"
+        Height="700" Width="900"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F5F5">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#2C3E50" Padding="15">
+            <StackPanel>
+                <TextBlock Text="P&amp;ID Standardization Application"
+                           FontSize="24" FontWeight="Bold"
+                           Foreground="White"/>
+                <TextBlock Text="Complete Workflow Guide"
+                           FontSize="14"
+                           Foreground="#BDC3C7"
+                           Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20">
+            <StackPanel>
+                <!-- Section 1: Getting Started -->
+                <TextBlock Text="1. Getting Started"
+                           FontSize="18" FontWeight="Bold"
+                           Foreground="#2C3E50"
+                           Margin="0,0,0,10"/>
+
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    <Run FontWeight="Bold">Application Startup:</Run>
+                    <LineBreak/>
+                    • When you launch the application, you MUST select a project to proceed
+                    <LineBreak/>
+                    • You can either select an existing project or create a new one
+                    <LineBreak/>
+                    • If you cancel project selection, the application will close
+                </TextBlock>
+
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,20">
+                    <Run FontWeight="Bold">Creating a New Project:</Run>
+                    <LineBreak/>
+                    1. Click "New Project" in the Project Selection dialog
+                    <LineBreak/>
+                    2. Fill in: Project Name (required), Client, Location, Description
+                    <LineBreak/>
+                    3. Select Tagging Mode: ISA, KKS, or Custom
+                    <LineBreak/>
+                    4. Click "Create" - the new project is automatically selected
+                </TextBlock>
+
+                <!-- Section 2: Equipment Management -->
+                <Border BorderBrush="#3498DB" BorderThickness="0,2,0,0" Padding="0,15,0,0" Margin="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock Text="2. Equipment Management"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="#2C3E50"
+                                   Margin="0,0,0,10"/>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                            <Run FontWeight="Bold">Adding Equipment:</Run>
+                            <LineBreak/>
+                            1. Navigate to the "Equipment" tab
+                            <LineBreak/>
+                            2. Click "Add Equipment" button
+                            <LineBreak/>
+                            3. Fill in the equipment details:
+                        </TextBlock>
+
+                        <TextBlock TextWrapping="Wrap" Margin="20,0,0,10" FontFamily="Consolas" FontSize="11">
+                            • Basic Info: Tag Number (required), Equipment Type, Description, Service, Area
+                            <LineBreak/>
+                            • Status: Planned / Installed / Commissioned / Decommissioned
+                            <LineBreak/>
+                            • Manufacturer Info: Manufacturer, Model
+                            <LineBreak/>
+                            • Equipment Connectivity (Optional):
+                            <LineBreak/>
+                              - Upstream Equipment: Select equipment that feeds into this one
+                            <LineBreak/>
+                              - Downstream Equipment: Select equipment this feeds into
+                            <LineBreak/>
+                            • Process Parameters (Optional):
+                            <LineBreak/>
+                              - Operating Pressure, Temperature, Flow Rate (with units)
+                            <LineBreak/>
+                              - Design Pressure, Temperature (max conditions)
+                            <LineBreak/>
+                              - Power/Capacity (kW, HP, m³, L, tons)
+                            <LineBreak/>
+                            • Drawing Assignment (Optional):
+                            <LineBreak/>
+                              - Source Drawing: Select the P&amp;ID drawing this equipment appears on
+                        </TextBlock>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                            4. Click "Save" to add the equipment to the database
+                        </TextBlock>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,20">
+                            <Run FontWeight="Bold">Example:</Run>
+                            <LineBreak/>
+                            Tag Number: P-100
+                            <LineBreak/>
+                            Equipment Type: Centrifugal Pump
+                            <LineBreak/>
+                            Service: Crude Oil Transfer
+                            <LineBreak/>
+                            Operating Pressure: 15 bar
+                            <LineBreak/>
+                            Design Pressure: 20 bar
+                            <LineBreak/>
+                            Downstream Equipment: V-100 (Control Valve)
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section 3: Lines Management -->
+                <Border BorderBrush="#3498DB" BorderThickness="0,2,0,0" Padding="0,15,0,0" Margin="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock Text="3. Piping Lines Management"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="#2C3E50"
+                                   Margin="0,0,0,10"/>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                            <Run FontWeight="Bold">Adding Piping Lines:</Run>
+                            <LineBreak/>
+                            1. Navigate to the "Lines" tab
+                            <LineBreak/>
+                            2. Click "Add Line" button
+                            <LineBreak/>
+                            3. Fill in line details:
+                        </TextBlock>
+
+                        <TextBlock TextWrapping="Wrap" Margin="20,0,0,10" FontFamily="Consolas" FontSize="11">
+                            • Basic Info: Line Number (required), Service, Fluid Type
+                            <LineBreak/>
+                            • Sizing: Nominal Size, Material Spec, Pipe Schedule (SCH 40/80/160)
+                            <LineBreak/>
+                            • Design Parameters: Design Pressure, Design Temperature (with units)
+                            <LineBreak/>
+                            • Connectivity:
+                            <LineBreak/>
+                              - From Equipment: Where the line starts
+                            <LineBreak/>
+                              - To Equipment: Where the line ends
+                            <LineBreak/>
+                            • Insulation: Required checkbox, Type, Thickness
+                            <LineBreak/>
+                            • Length: Optional pipe length
+                            <LineBreak/>
+                            • Drawing Assignment (Optional): Select source drawing
+                        </TextBlock>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,20">
+                            <Run FontWeight="Bold">Example:</Run>
+                            <LineBreak/>
+                            Line Number: L-100
+                            <LineBreak/>
+                            From Equipment: P-100 (Pump)
+                            <LineBreak/>
+                            To Equipment: TK-200 (Tank)
+                            <LineBreak/>
+                            Nominal Size: 6"
+                            <LineBreak/>
+                            Material Spec: CS ASTM A106
+                            <LineBreak/>
+                            Design Pressure: 20 bar
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section 4: Instruments -->
+                <Border BorderBrush="#3498DB" BorderThickness="0,2,0,0" Padding="0,15,0,0" Margin="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock Text="4. Instrumentation Management"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="#2C3E50"
+                                   Margin="0,0,0,10"/>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                            <Run FontWeight="Bold">Adding Instruments:</Run>
+                            <LineBreak/>
+                            1. Navigate to the "Instruments" tab
+                            <LineBreak/>
+                            2. Click "Add Instrument" button
+                            <LineBreak/>
+                            3. Fill in instrument details:
+                        </TextBlock>
+
+                        <TextBlock TextWrapping="Wrap" Margin="20,0,0,10" FontFamily="Consolas" FontSize="11">
+                            • Tag Number (required), Instrument Type, Measurement Type
+                            <LineBreak/>
+                            • Range: Min, Max, Units
+                            <LineBreak/>
+                            • Technical: Accuracy, Process Connection, Output Signal, Loop Number
+                            <LineBreak/>
+                            • Association (Choose ONE):
+                            <LineBreak/>
+                              ○ Associated with Equipment: For instruments mounted on equipment
+                            <LineBreak/>
+                              ○ Installed on Line: For instruments measuring line parameters
+                            <LineBreak/>
+                            • Drawing Assignment (Optional): Select source drawing
+                        </TextBlock>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,20">
+                            <Run FontWeight="Bold">Examples:</Run>
+                            <LineBreak/>
+                            PT-100 (Pressure Transmitter) → Installed on Line L-100
+                            <LineBreak/>
+                            TI-200 (Temperature Indicator) → Associated with Equipment TK-200
+                            <LineBreak/>
+                            FT-300 (Flow Transmitter) → Installed on Line L-300
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section 5: Drawing Assignment -->
+                <Border BorderBrush="#E74C3C" BorderThickness="0,2,0,0" Padding="0,15,0,0" Margin="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock Text="5. P&amp;ID Drawing Assignment"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="#E74C3C"
+                                   Margin="0,0,0,10"/>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                            <Run FontWeight="Bold">Method 1: Assign Drawing to Equipment/Lines/Instruments (Recommended):</Run>
+                            <LineBreak/>
+                            1. First, create or import drawings in the "Drawings" tab
+                            <LineBreak/>
+                            2. When adding/editing Equipment, Lines, or Instruments:
+                            <LineBreak/>
+                            3. Look for the "Source Drawing" dropdown
+                            <LineBreak/>
+                            4. Select the P&amp;ID drawing where this item appears
+                            <LineBreak/>
+                            5. Click "Save"
+                        </TextBlock>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10" Background="#FFF9E6" Padding="10">
+                            <Run FontWeight="Bold" Foreground="#E67E22">⚠ Important:</Run>
+                            <LineBreak/>
+                            Drawing assignment links your equipment/lines/instruments to specific P&amp;ID sheets.
+                            <LineBreak/>
+                            This enables:
+                            <LineBreak/>
+                            • Tracking which items appear on which drawings
+                            <LineBreak/>
+                            • Filtering items by drawing
+                            <LineBreak/>
+                            • AutoCAD integration (extracting tags from drawings)
+                            <LineBreak/>
+                            • Cross-referencing between database and drawings
+                        </TextBlock>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,20">
+                            <Run FontWeight="Bold">Method 2: AutoCAD Import (Future Enhancement):</Run>
+                            <LineBreak/>
+                            When AutoCAD integration is fully implemented:
+                            <LineBreak/>
+                            1. Navigate to "Drawings" tab → Click "Import from AutoCAD"
+                            <LineBreak/>
+                            2. Select the .dwg file
+                            <LineBreak/>
+                            3. System automatically extracts blocks and attributes
+                            <LineBreak/>
+                            4. Equipment/Lines/Instruments are created with DrawingId pre-assigned
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section 6: Data Export -->
+                <Border BorderBrush="#3498DB" BorderThickness="0,2,0,0" Padding="0,15,0,0" Margin="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock Text="6. Data Export"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="#2C3E50"
+                                   Margin="0,0,0,10"/>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,20">
+                            Each tab (Equipment, Lines, Instruments, Drawings) has an "Export to Excel" button:
+                            <LineBreak/>
+                            1. Click "Export to Excel"
+                            <LineBreak/>
+                            2. Choose save location and filename
+                            <LineBreak/>
+                            3. Excel file is generated with formatted headers, filters, and data
+                            <LineBreak/>
+                            4. Use for client deliverables, reviews, or offline analysis
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section 7: Project Switching -->
+                <Border BorderBrush="#3498DB" BorderThickness="0,2,0,0" Padding="0,15,0,0" Margin="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock Text="7. Switching Between Projects"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="#2C3E50"
+                                   Margin="0,0,0,10"/>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,20">
+                            To work on a different project:
+                            <LineBreak/>
+                            1. Go to File → Open Project
+                            <LineBreak/>
+                            2. Select the project from the list
+                            <LineBreak/>
+                            3. Click "Select Project"
+                            <LineBreak/>
+                            4. All tabs will now display data for the selected project
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section 8: Typical Workflow -->
+                <Border BorderBrush="#27AE60" BorderThickness="0,2,0,0" Padding="0,15,0,0" Margin="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock Text="8. Typical P&amp;ID Engineering Workflow"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="#27AE60"
+                                   Margin="0,0,0,10"/>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10" FontFamily="Consolas" FontSize="11" Background="#E8F8F5" Padding="10">
+                            Step 1: Create Project
+                            <LineBreak/>
+                              → File → New Project → Enter "Refinery Unit 100" → Select ISA tagging
+                            <LineBreak/>
+                            <LineBreak/>
+                            Step 2: Add Drawings
+                            <LineBreak/>
+                              → Drawings tab → Add Drawing → Enter "P&amp;ID-001", "Crude Unit"
+                            <LineBreak/>
+                            <LineBreak/>
+                            Step 3: Add Equipment
+                            <LineBreak/>
+                              → Equipment tab → Add Equipment:
+                            <LineBreak/>
+                              → P-100 (Feed Pump), TK-200 (Storage Tank), V-100 (Control Valve)
+                            <LineBreak/>
+                              → Assign each to Drawing "P&amp;ID-001"
+                            <LineBreak/>
+                            <LineBreak/>
+                            Step 4: Add Piping Lines
+                            <LineBreak/>
+                              → Lines tab → Add Line:
+                            <LineBreak/>
+                              → L-100: FROM P-100 TO V-100
+                            <LineBreak/>
+                              → L-200: FROM V-100 TO TK-200
+                            <LineBreak/>
+                            <LineBreak/>
+                            Step 5: Add Instruments
+                            <LineBreak/>
+                              → Instruments tab → Add Instrument:
+                            <LineBreak/>
+                              → PT-100 on Line L-100 (Pressure Transmitter)
+                            <LineBreak/>
+                              → TI-200 on Equipment TK-200 (Temperature Indicator)
+                            <LineBreak/>
+                            <LineBreak/>
+                            Step 6: Export Data
+                            <LineBreak/>
+                              → Each tab → Export to Excel → Deliverable ready!
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section 9: Tips -->
+                <Border BorderBrush="#9B59B6" BorderThickness="0,2,0,0" Padding="0,15,0,0" Margin="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock Text="9. Tips &amp; Best Practices"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="#9B59B6"
+                                   Margin="0,0,0,10"/>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
+                            ✓ Always assign equipment/lines to drawings for better organization
+                        </TextBlock>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
+                            ✓ Use consistent tagging based on your project's tagging mode
+                        </TextBlock>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
+                            ✓ Fill in process parameters during equipment entry (saves time later)
+                        </TextBlock>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
+                            ✓ Define equipment connectivity to track flow paths
+                        </TextBlock>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
+                            ✓ Export to Excel regularly for backups and client reviews
+                        </TextBlock>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,20">
+                            ✓ Use "Refresh" button if data doesn't update immediately
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" Background="#ECF0F1" Padding="15">
+            <Button Content="Close" Width="100" Height="35"
+                    HorizontalAlignment="Right" Click="Close_Click"
+                    Background="#3498DB" Foreground="White"
+                    FontWeight="Bold" BorderThickness="0"/>
+        </Border>
+    </Grid>
+</Window>
