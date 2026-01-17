@@ -1,0 +1,144 @@
+<Window x:Class="PIDStandardization.UI.Views.WelcomeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Welcome to P&amp;ID Standardization Application"
+        Height="550" Width="700"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#2196F3" Padding="20">
+            <StackPanel>
+                <TextBlock Text="P&amp;ID Standardization Application"
+                           FontSize="24" FontWeight="Bold"
+                           Foreground="White" HorizontalAlignment="Center"/>
+                <TextBlock Text="Streamline your P&amp;ID tagging and equipment management"
+                           FontSize="14" Foreground="White"
+                           HorizontalAlignment="Center" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20">
+            <StackPanel>
+                <!-- Quick Start Guide -->
+                <TextBlock Text="Quick Start Guide" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                <StackPanel Margin="0,0,0,20">
+                    <!-- Step 1 -->
+                    <Border Background="#F5F5F5" Padding="15" Margin="0,0,0,10" CornerRadius="5">
+                        <StackPanel>
+                            <TextBlock FontWeight="Bold" FontSize="14" Margin="0,0,0,5">
+                                <Run Text="1. " Foreground="#2196F3" FontSize="16"/>
+                                <Run Text="Create a New Project"/>
+                            </TextBlock>
+                            <TextBlock TextWrapping="Wrap" Foreground="#666">
+                                Click "New Project" button and enter project details. Choose between Custom or KKS tagging mode based on your requirements.
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Step 2 -->
+                    <Border Background="#F5F5F5" Padding="15" Margin="0,0,0,10" CornerRadius="5">
+                        <StackPanel>
+                            <TextBlock FontWeight="Bold" FontSize="14" Margin="0,0,0,5">
+                                <Run Text="2. " Foreground="#2196F3" FontSize="16"/>
+                                <Run Text="Install AutoCAD Plugin"/>
+                            </TextBlock>
+                            <TextBlock TextWrapping="Wrap" Foreground="#666">
+                                In AutoCAD 2026, type NETLOAD and browse to: AutoCAD_Plugin\PIDStandardization.AutoCAD.dll
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Step 3 -->
+                    <Border Background="#F5F5F5" Padding="15" Margin="0,0,0,10" CornerRadius="5">
+                        <StackPanel>
+                            <TextBlock FontWeight="Bold" FontSize="14" Margin="0,0,0,5">
+                                <Run Text="3. " Foreground="#2196F3" FontSize="16"/>
+                                <Run Text="Extract Equipment from P&amp;ID"/>
+                            </TextBlock>
+                            <TextBlock TextWrapping="Wrap" Foreground="#666">
+                                Open your P&amp;ID drawing in AutoCAD, type PIDEXTRACTDB, select your project, and equipment will be automatically saved to the database.
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Step 4 -->
+                    <Border Background="#F5F5F5" Padding="15" Margin="0,0,0,10" CornerRadius="5">
+                        <StackPanel>
+                            <TextBlock FontWeight="Bold" FontSize="14" Margin="0,0,0,5">
+                                <Run Text="4. " Foreground="#2196F3" FontSize="16"/>
+                                <Run Text="Review and Validate Tags"/>
+                            </TextBlock>
+                            <TextBlock TextWrapping="Wrap" Foreground="#666">
+                                Go to the Equipment tab to review extracted equipment. Add or edit equipment details, descriptions, and specifications.
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Step 5 -->
+                    <Border Background="#F5F5F5" Padding="15" Margin="0,0,0,10" CornerRadius="5">
+                        <StackPanel>
+                            <TextBlock FontWeight="Bold" FontSize="14" Margin="0,0,0,5">
+                                <Run Text="5. " Foreground="#2196F3" FontSize="16"/>
+                                <Run Text="Export to Excel"/>
+                            </TextBlock>
+                            <TextBlock TextWrapping="Wrap" Foreground="#666">
+                                Use the "Export to Excel" button to generate equipment lists, valve lists, and instrument lists for your project.
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Features -->
+                <TextBlock Text="Key Features" FontSize="16" FontWeight="Bold" Margin="0,10,0,10"/>
+                <StackPanel Margin="10,0,0,0">
+                    <TextBlock TextWrapping="Wrap" Margin="0,3">
+                        • <Run FontWeight="SemiBold">Dual Tagging Modes:</Run> Support for Custom and KKS (DIN 40719) tagging standards
+                    </TextBlock>
+                    <TextBlock TextWrapping="Wrap" Margin="0,3">
+                        • <Run FontWeight="SemiBold">AutoCAD Integration:</Run> Extract equipment directly from P&amp;ID drawings
+                    </TextBlock>
+                    <TextBlock TextWrapping="Wrap" Margin="0,3">
+                        • <Run FontWeight="SemiBold">Smart Block Learning:</Run> System learns equipment types from AutoCAD block names
+                    </TextBlock>
+                    <TextBlock TextWrapping="Wrap" Margin="0,3">
+                        • <Run FontWeight="SemiBold">Excel Import/Export:</Run> Seamless data exchange with Excel spreadsheets
+                    </TextBlock>
+                    <TextBlock TextWrapping="Wrap" Margin="0,3">
+                        • <Run FontWeight="SemiBold">Version Control:</Run> Track drawing versions and equipment changes
+                    </TextBlock>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" Background="#F5F5F5" Padding="20" BorderBrush="#DDD" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <CheckBox Grid.Column="0" Name="DontShowAgainCheckBox"
+                          Content="Don't show this welcome screen again"
+                          VerticalAlignment="Center"/>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="View Documentation" Width="150" Height="35"
+                            Margin="0,0,10,0" Click="ViewDocumentation_Click"/>
+                    <Button Content="Get Started" Width="120" Height="35"
+                            Background="#2196F3" Foreground="White"
+                            Click="GetStarted_Click" IsDefault="True"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

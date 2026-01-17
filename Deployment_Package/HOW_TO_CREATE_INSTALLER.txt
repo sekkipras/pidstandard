@@ -1,0 +1,202 @@
+========================================
+HOW TO CREATE A PROFESSIONAL INSTALLER
+P&ID Standardization Application
+========================================
+
+We've included an installer script that will create a professional setup.exe
+like Visual Studio Code, AutoCAD, or any commercial application.
+
+========================================
+METHOD 1: USING INNO SETUP (RECOMMENDED)
+========================================
+
+WHAT IS INNO SETUP?
+-------------------
+Inno Setup is a free, professional installer creation tool used by thousands
+of applications including popular software like 7-Zip and many others.
+
+STEP 1: DOWNLOAD INNO SETUP
+---------------------------
+1. Go to: https://jrsoftware.org/isdl.php
+2. Download "Inno Setup 6.x" (latest version)
+3. Install it on your computer (it's free!)
+
+STEP 2: CREATE THE INSTALLER
+----------------------------
+1. Open Inno Setup Compiler
+2. Click File → Open
+3. Browse to: PIDStandardization_Installer.iss
+4. Click Build → Compile (or press F9)
+5. Wait for compilation to complete (takes about 30 seconds)
+
+STEP 3: GET YOUR INSTALLER
+--------------------------
+The installer will be created in:
+  Deployment_Package\Installer_Output\PIDStandardization_Setup_v1.0.0.exe
+
+This is the file you distribute to your team!
+
+FILE SIZE:
+- The setup.exe will be about 170-180 MB (includes everything)
+- Self-extracting, professional installer
+- Includes uninstaller automatically
+
+
+========================================
+WHAT THE INSTALLER DOES
+========================================
+
+PROFESSIONAL INSTALLATION EXPERIENCE:
+- Welcome screen with application description
+- License agreement (if you add one)
+- Choose installation directory
+- Select components to install
+- Create desktop shortcut (optional)
+- Configure AutoCAD auto-load (optional)
+- Progress bar during installation
+- Launch application after install (optional)
+
+INSTALLED FILES:
+- Main application: C:\Program Files\PIDStandardization\
+- AutoCAD plugin: C:\Program Files\PIDStandardization\AutoCAD_Plugin\
+- Documentation and guides
+- Start Menu shortcuts
+- Desktop shortcut (if selected)
+- AutoCAD auto-load configuration (if selected)
+
+UNINSTALLER:
+- Professional uninstaller in Control Panel
+- Removes all files and registry entries
+- Option to keep user data or remove it
+
+
+========================================
+DISTRIBUTING TO YOUR TEAM
+========================================
+
+BEFORE CREATING THE INSTALLER:
+1. Make sure all files in Deployment_Package are up-to-date
+2. Test the application on your computer
+3. Update version number in PIDStandardization_Installer.iss if needed
+
+TO DISTRIBUTE:
+1. Share the setup.exe file (from Installer_Output folder)
+2. Team members just double-click the setup.exe
+3. Follow the installation wizard
+4. Done! Application installed like any professional software
+
+INSTALLATION REQUIREMENTS FOR TEAM:
+- Windows 10/11 (64-bit)
+- Administrator rights (to install to Program Files)
+- SQL Server 2022 Express (should already be installed)
+- AutoCAD 2026 (for plugin features, optional)
+- About 200 MB free disk space
+
+
+========================================
+METHOD 2: USING INSTALL.BAT (ALTERNATIVE)
+========================================
+
+If you don't want to install Inno Setup, you can still use the INSTALL.bat
+script we created earlier:
+
+1. Right-click INSTALL.bat → Run as administrator
+2. Files are copied to C:\Program Files\PIDStandardization\
+3. AutoCAD is configured
+4. Desktop shortcut is created
+
+NOTE: This method doesn't create a professional installer file, but it works
+for quick deployment on individual computers.
+
+
+========================================
+METHOD 3: MANUAL COPY (SIMPLEST)
+========================================
+
+For testing or individual installations:
+
+1. Copy the Deployment_Package folder to team members
+2. They run INSTALL.bat as administrator
+   OR
+3. They manually copy PIDStandardization.UI.exe anywhere and run it
+4. They manually load the AutoCAD plugin using NETLOAD
+
+
+========================================
+CUSTOMIZING THE INSTALLER
+========================================
+
+You can edit PIDStandardization_Installer.iss to customize:
+
+LINE 6-8: Change application name, version, publisher
+LINE 28: Change default installation directory
+LINE 65-66: Add your company logo icons
+LINE 94-99: Customize Start Menu shortcuts
+LINE 145-165: Modify AutoCAD configuration logic
+
+After making changes, recompile with Inno Setup.
+
+
+========================================
+ADVANCED: CODE SIGNING (OPTIONAL)
+========================================
+
+For enterprise deployment, you may want to digitally sign the installer
+to avoid Windows SmartScreen warnings:
+
+1. Obtain a code signing certificate from a Certificate Authority
+2. Use SignTool.exe to sign the setup.exe
+3. Alternatively, configure Inno Setup to sign during compilation
+
+This is optional but recommended for professional deployment.
+
+
+========================================
+TROUBLESHOOTING
+========================================
+
+PROBLEM: "Access denied" during installation
+SOLUTION: Right-click setup.exe → Run as administrator
+
+PROBLEM: Windows SmartScreen blocks the installer
+SOLUTION: Click "More info" → "Run anyway" (or use code signing)
+
+PROBLEM: Compilation fails in Inno Setup
+SOLUTION: Check that all files referenced in .iss exist in Deployment_Package
+
+PROBLEM: Installer created but application won't run
+SOLUTION: Test PIDStandardization.UI.exe directly first to verify it works
+
+
+========================================
+RECOMMENDED WORKFLOW
+========================================
+
+FOR FIRST DISTRIBUTION:
+1. Download and install Inno Setup (one-time, 5 minutes)
+2. Open PIDStandardization_Installer.iss in Inno Setup
+3. Click Compile (F9)
+4. Share the generated setup.exe with your team
+5. Done!
+
+FOR FUTURE UPDATES:
+1. Update the application files in Deployment_Package
+2. Change version number in PIDStandardization_Installer.iss (line 7)
+3. Recompile in Inno Setup
+4. Distribute new setup.exe to team
+
+DURATION:
+- First time: 10-15 minutes (including Inno Setup installation)
+- Subsequent times: 1-2 minutes (just recompile)
+
+
+========================================
+SUPPORT
+========================================
+
+Inno Setup Documentation: https://jrsoftware.org/ishelp/
+Inno Setup FAQ: https://jrsoftware.org/isfaq.php
+
+For P&ID Standardization application issues, refer to INSTALLATION_GUIDE.txt
+
+========================================

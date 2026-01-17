@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="PIDStandardization.AutoCAD/PIDStandardization.AutoCAD.csproj" Id="46180e5d-77ae-4b97-bcd6-34bebeb28c5d" />
+  <Project Path="PIDStandardization.Core/PIDStandardization.Core.csproj" Id="157684a4-603d-4f74-99b4-19787715b151" />
+  <Project Path="PIDStandardization.Data/PIDStandardization.Data.csproj" Id="897b1775-e3f3-43f6-b808-20a46ee459b6" />
+  <Project Path="PIDStandardization.Services/PIDStandardization.Services.csproj" Id="f6c0ef72-f65e-4303-a68c-1d07d6a4c47a" />
+  <Project Path="PIDStandardization.Tests/PIDStandardization.Tests.csproj" Id="83a8f71f-822a-4bda-9728-1b16746bcd24" />
+  <Project Path="PIDStandardization.UI/PIDStandardization.UI.csproj" Id="0a644671-ac02-430b-8357-8c95721ede3c" />
+</Solution>

@@ -1,0 +1,70 @@
+<Window x:Class="PIDStandardization.UI.Views.NewProjectDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="New Project" Height="500" Width="500"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Project Name -->
+        <TextBlock Grid.Row="0" Text="Project Name:" Margin="0,5"/>
+        <TextBox Grid.Row="1" Name="ProjectNameTextBox" Margin="0,5" Height="25"/>
+
+        <!-- Project Number -->
+        <TextBlock Grid.Row="2" Text="Project Number:" Margin="0,5"/>
+        <TextBox Grid.Row="3" Name="ProjectNumberTextBox" Margin="0,5" Height="25"/>
+
+        <!-- Client -->
+        <TextBlock Grid.Row="4" Text="Client:" Margin="0,5"/>
+        <TextBox Grid.Row="5" Name="ClientTextBox" Margin="0,5" Height="25"/>
+
+        <!-- Tagging Mode -->
+        <GroupBox Grid.Row="6" Header="Tagging Mode" Margin="0,10">
+            <StackPanel Margin="10">
+                <RadioButton Name="CustomRadioButton" Content="Custom Tagging" IsChecked="True" Margin="0,5">
+                    <RadioButton.ToolTip>
+                        <ToolTip>
+                            <TextBlock>
+                                Custom tagging format allows flexible user-defined tag numbers.
+                                <LineBreak/>
+                                Example: P-100-PMP-001, TK-001, HX-201
+                            </TextBlock>
+                        </ToolTip>
+                    </RadioButton.ToolTip>
+                </RadioButton>
+                <RadioButton Name="KKSRadioButton" Content="KKS Standard (DIN 40719)" Margin="0,5">
+                    <RadioButton.ToolTip>
+                        <ToolTip>
+                            <TextBlock>
+                                KKS (Kraftwerk-Kennzeichensystem) standard tagging.
+                                <LineBreak/>
+                                Format: +[Function] [Location] [Equipment]
+                                <LineBreak/>
+                                Example: +LAA 10 CP001
+                            </TextBlock>
+                        </ToolTip>
+                    </RadioButton.ToolTip>
+                </RadioButton>
+                <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Foreground="OrangeRed" FontWeight="Bold">
+                    Warning: Tagging mode cannot be changed after tags are assigned to equipment!
+                </TextBlock>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10">
+            <Button Content="Create" Width="80" Height="30" Margin="5" Click="Create_Click" IsDefault="True"/>
+            <Button Content="Cancel" Width="80" Height="30" Margin="5" Click="Cancel_Click" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

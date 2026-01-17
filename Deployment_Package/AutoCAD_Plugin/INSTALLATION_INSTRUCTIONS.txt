@@ -1,0 +1,110 @@
+========================================
+AutoCAD Plugin Installation Guide
+P&ID Standardization Application
+========================================
+
+AUTOCAD PLUGIN INSTALLATION:
+---------------------------
+
+METHOD 1: MANUAL LOADING (Quick Test)
+--------------------------------------
+1. Open AutoCAD 2026
+2. Type: NETLOAD
+3. Press Enter
+4. In the file browser, navigate to this folder:
+   AutoCAD_Plugin\PIDStandardization.AutoCAD.dll
+5. Select the DLL and click "Load"
+6. Test by typing: PIDINFO
+
+Note: This method loads the plugin for the current AutoCAD session only.
+You'll need to repeat this every time you restart AutoCAD.
+
+
+METHOD 2: AUTO-LOADING (Recommended for Team)
+---------------------------------------------
+To load the plugin automatically every time AutoCAD starts:
+
+1. Copy the entire AutoCAD_Plugin folder to a permanent location:
+   Recommended: C:\Program Files\PIDStandardization\AutoCAD_Plugin\
+
+2. Create/Edit the acad20XX.lsp file:
+   Location: C:\Users\{YourUsername}\AppData\Roaming\Autodesk\AutoCAD 2026\R24.1\enu\Support\acad2026.lsp
+
+3. Add this line to acad2026.lsp:
+   (command "NETLOAD" "C:\\Program Files\\PIDStandardization\\AutoCAD_Plugin\\PIDStandardization.AutoCAD.dll")
+
+4. Save the file
+
+5. Restart AutoCAD - the plugin will load automatically
+
+
+AVAILABLE COMMANDS:
+------------------
+After loading the plugin, you can use these commands:
+
+PIDEXTRACTDB
+  - Extract equipment from the current drawing
+  - Save equipment to the database
+  - Link equipment to selected drawing
+  - Learn block-to-equipment-type mappings
+
+PIDEXTRACT
+  - Extract equipment from the current drawing
+  - Display results in a dialog (view only, no save)
+
+PIDTAG
+  - Tag equipment in the drawing
+  - Add tag numbers as text or attributes
+
+PIDINFO
+  - Show plugin information and version
+
+
+TYPICAL WORKFLOW:
+----------------
+1. Open your P&ID drawing in AutoCAD 2026
+2. Type: PIDEXTRACTDB
+3. Select the project from the list
+4. Select the source drawing from the list
+5. Equipment is extracted and saved to database
+6. Open the WPF application to view/manage equipment
+
+
+TROUBLESHOOTING:
+---------------
+Problem: "Could not load file or assembly..."
+Solution: Ensure all DLL files in AutoCAD_Plugin folder are present
+
+Problem: "NETLOAD command not recognized"
+Solution: You may be using an older AutoCAD version. This plugin requires AutoCAD 2026.
+
+Problem: Commands work but database connection fails
+Solution:
+  - Verify SQL Server is running
+  - Check the connection string in the main application
+  - Run AutoCAD as Administrator
+
+Problem: Plugin loads but equipment extraction fails
+Solution:
+  - Ensure your drawing contains block references
+  - Check that blocks have appropriate names/attributes
+  - Review the AutoCAD command line for error messages
+
+
+REQUIRED FILES:
+--------------
+The following files must be present in the AutoCAD_Plugin folder:
+- PIDStandardization.AutoCAD.dll (main plugin)
+- PIDStandardization.Core.dll
+- PIDStandardization.Data.dll
+- PIDStandardization.Services.dll
+- Microsoft.EntityFrameworkCore.dll
+- Microsoft.Data.SqlClient.dll
+- And all other dependency DLLs
+
+Do not delete any files from this folder!
+
+
+========================================
+For support, contact the development team
+========================================

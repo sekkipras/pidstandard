@@ -1,0 +1,50 @@
+using PIDStandardization.Core.Enums;
+
+namespace PIDStandardization.Core.Entities
+{
+    /// <summary>
+    /// Represents a piece of equipment (pump, valve, tank, etc.)
+    /// Works with both Custom and KKS tagging modes
+    /// </summary>
+    public class Equipment
+    {
+        public Guid EquipmentId { get; set; }
+        public Guid ProjectId { get; set; }
+
+        /// <summary>
+        /// Unique tag number (e.g., P-100-PMP-001 or +LAA 10 CP001)
+        /// </summary>
+        public string TagNumber { get; set; } = string.Empty;
+
+        public string? EquipmentType { get; set; }
+        public string? Description { get; set; }
+        public string? Service { get; set; }
+        public string? Area { get; set; }
+
+        public EquipmentStatus Status { get; set; } = EquipmentStatus.Planned;
+
+        public string? Manufacturer { get; set; }
+        public string? Model { get; set; }
+        public string? SerialNumber { get; set; }
+        public DateTime? InstallationDate { get; set; }
+
+        /// <summary>
+        /// JSON string for flexible attributes
+        /// </summary>
+        public string? SpecificationJson { get; set; }
+
+        public string? CreatedBy { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public string? ModifiedBy { get; set; }
+        public DateTime? ModifiedDate { get; set; }
+        public bool IsActive { get; set; } = true;
+
+        // Source drawing tracking
+        public Guid? DrawingId { get; set; }
+        public string? SourceBlockName { get; set; }
+
+        // Navigation properties
+        public virtual Project? Project { get; set; }
+        public virtual Drawing? SourceDrawing { get; set; }
+    }
+}

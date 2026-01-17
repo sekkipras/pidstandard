@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage
+    SchemaVersion="1.0"
+    AutodeskProduct="AutoCAD"
+    ProductType="Application"
+    Name="PIDStandardization"
+    Description="P&ID Standardization and Equipment Tagging Application"
+    Author="PIDStandardization Team"
+    AppVersion="1.0.0"
+    ProductCode="{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+    FriendlyVersion="1.0.0"
+    AppNameSpace="PIDStandardization.AutoCAD">
+
+  <CompanyDetails
+      Name="P&ID Standardization"
+      Email="support@pidstandardization.local"
+      Url=""/>
+
+  <Components Description="PID Standardization Plugin Components">
+    <RuntimeRequirements
+        OS="Win64"
+        Platform="AutoCAD*"
+        SeriesMin="R24.1"
+        SeriesMax="R24.1"/>
+
+    <ComponentEntry
+        AppName="PIDStandardization"
+        ModuleName="./PIDStandardization.AutoCAD.dll"
+        AppDescription="P&ID Equipment Extraction and Tagging"
+        LoadOnCommandInvocation="True"
+        LoadOnAutoCADStartup="True">
+
+      <Commands GroupName="PIDStandardization_Commands">
+        <Command Global="PIDEXTRACTDB" Local="PIDEXTRACTDB"/>
+        <Command Global="PIDEXTRACT" Local="PIDEXTRACT"/>
+        <Command Global="PIDTAG" Local="PIDTAG"/>
+        <Command Global="PIDINFO" Local="PIDINFO"/>
+      </Commands>
+    </ComponentEntry>
+  </Components>
+</ApplicationPackage>

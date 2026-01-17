@@ -1,0 +1,210 @@
+========================================
+P&ID STANDARDIZATION APPLICATION
+COMPLETE INSTALLATION GUIDE
+========================================
+
+CHOOSE YOUR INSTALLATION METHOD:
+
+========================================
+METHOD 1: AUTOMATED INSTALLATION (RECOMMENDED)
+========================================
+
+This is the easiest method - a script does everything for you!
+
+STEPS:
+------
+1. Right-click on "INSTALL.bat"
+2. Select "Run as administrator"
+3. Follow the on-screen prompts
+4. Done! A desktop shortcut will be created
+
+WHAT IT DOES:
+- Installs the main application to C:\Program Files\PIDStandardization\
+- Copies AutoCAD plugin files
+- Configures AutoCAD to auto-load the plugin on startup
+- Creates a desktop shortcut
+
+AFTER INSTALLATION:
+- Double-click "P&ID Standardization" on your desktop
+- Open AutoCAD 2026 - plugin loads automatically
+- Type PIDINFO in AutoCAD to confirm it's loaded
+
+
+========================================
+METHOD 2: AUTOCAD BUNDLE (ALTERNATIVE)
+========================================
+
+Use this method if you want AutoCAD to discover the plugin automatically.
+
+STEPS:
+------
+1. Copy the entire "AutoCAD_Plugin" folder to:
+   C:\ProgramData\Autodesk\ApplicationPlugins\PIDStandardization.bundle\
+
+2. Rename "AutoCAD_Plugin" to "PIDStandardization.bundle"
+
+3. Restart AutoCAD 2026
+
+4. The plugin will load automatically
+
+FOLDER STRUCTURE SHOULD LOOK LIKE:
+C:\ProgramData\Autodesk\ApplicationPlugins\PIDStandardization.bundle\
+├── PackageContents.xml
+├── PIDStandardization.AutoCAD.dll
+├── PIDStandardization.Core.dll
+├── PIDStandardization.Data.dll
+└── [all other DLL files]
+
+
+========================================
+METHOD 3: MANUAL INSTALLATION
+========================================
+
+For advanced users who want full control.
+
+MAIN APPLICATION:
+-----------------
+1. Copy "PIDStandardization.UI.exe" to any folder
+   (Recommended: C:\Program Files\PIDStandardization\)
+
+2. Double-click the .exe to run the application
+
+AUTOCAD PLUGIN (MANUAL LOAD):
+-----------------------------
+1. Copy the "AutoCAD_Plugin" folder to a permanent location
+   (Recommended: C:\Program Files\PIDStandardization\AutoCAD_Plugin\)
+
+2. Open AutoCAD 2026
+
+3. Type: NETLOAD
+
+4. Browse to: C:\Program Files\PIDStandardization\AutoCAD_Plugin\PIDStandardization.AutoCAD.dll
+
+5. Click "Load"
+
+6. Type PIDINFO to confirm it's working
+
+NOTE: With manual loading, you'll need to NETLOAD the plugin each time you start AutoCAD.
+
+
+========================================
+AUTOCAD AUTO-LOAD SETUP (MANUAL)
+========================================
+
+If you want AutoCAD to load the plugin automatically every time it starts:
+
+1. Locate your AutoCAD support folder:
+   %APPDATA%\Autodesk\AutoCAD 2026\R24.1\enu\Support\
+
+2. Create or edit the file: acad2026.lsp
+
+3. Add these lines to the file:
+
+(defun S::STARTUP ()
+  (command "._NETLOAD" "C:\\Program Files\\PIDStandardization\\AutoCAD_Plugin\\PIDStandardization.AutoCAD.dll")
+  (princ "\nP&ID Standardization plugin loaded!\n")
+  (princ)
+)
+
+4. Save the file
+
+5. Restart AutoCAD - the plugin will now load automatically
+
+
+========================================
+VERIFICATION
+========================================
+
+TO VERIFY MAIN APPLICATION:
+1. Double-click PIDStandardization.UI.exe
+2. You should see a welcome screen
+3. Click "Get Started"
+4. Create a new project to test
+
+TO VERIFY AUTOCAD PLUGIN:
+1. Open AutoCAD 2026
+2. Look for message: "P&ID Standardization plugin loaded!"
+3. Type: PIDINFO
+4. You should see plugin information
+
+AVAILABLE COMMANDS:
+- PIDEXTRACTDB : Extract equipment from drawing and save to database
+- PIDEXTRACT   : Extract equipment (view only, no save)
+- PIDTAG       : Tag equipment in the drawing
+- PIDINFO      : Show plugin information
+
+
+========================================
+TROUBLESHOOTING
+========================================
+
+PROBLEM: INSTALL.bat says "must be run as Administrator"
+SOLUTION: Right-click INSTALL.bat → "Run as administrator"
+
+PROBLEM: Main application won't start
+SOLUTION:
+- Check if SQL Server is running
+- Try running as Administrator
+- Check Windows Event Viewer for errors
+
+PROBLEM: AutoCAD says "Could not load file or assembly"
+SOLUTION:
+- Ensure ALL DLL files from AutoCAD_Plugin folder are present
+- Check that you're using AutoCAD 2026 (not older versions)
+- Try running AutoCAD as Administrator
+
+PROBLEM: Plugin loads but commands don't work
+SOLUTION:
+- Verify SQL Server connection
+- Check database exists
+- Run PIDStandardization.UI.exe first to create database
+
+PROBLEM: Plugin doesn't auto-load in AutoCAD
+SOLUTION:
+- Check acad2026.lsp file exists in support folder
+- Verify file path in .lsp file is correct
+- Try APPLOAD command in AutoCAD and load manually first
+
+PROBLEM: "Access denied" errors
+SOLUTION:
+- Run installation as Administrator
+- Check antivirus isn't blocking the files
+- Ensure you have write permissions to install folder
+
+
+========================================
+UNINSTALLATION
+========================================
+
+TO REMOVE THE APPLICATION:
+1. Delete: C:\Program Files\PIDStandardization\
+2. Delete desktop shortcut
+3. Delete: %APPDATA%\Autodesk\AutoCAD 2026\R24.1\enu\Support\acad2026.lsp
+   (or remove the PIDStandardization lines from it)
+4. Delete: %APPDATA%\PIDStandardization\ (user settings)
+5. Delete: %PROGRAMDATA%\PIDStandardization\ (drawings and data)
+6. Optional: Remove database from SQL Server
+
+
+========================================
+SYSTEM REQUIREMENTS
+========================================
+
+- Windows 10/11 (64-bit)
+- SQL Server 2022 Express or higher
+- AutoCAD 2026 (for plugin features)
+- .NET 8.0 Runtime (included in .exe)
+- 200 MB free disk space
+- Administrator rights (for installation)
+
+
+========================================
+SUPPORT
+========================================
+
+For issues or questions:
+- Check README.txt for quick reference
+- Check this guide's Troubleshooting section
+- Contact your IT department or development team
+
+========================================
