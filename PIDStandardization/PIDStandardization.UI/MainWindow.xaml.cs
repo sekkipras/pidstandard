@@ -19,6 +19,7 @@ namespace PIDStandardization.UI
         private bool _isLoadingEquipmentProjects = false;
         private bool _isLoadingLinesProjects = false;
         private bool _isLoadingInstrumentsProjects = false;
+        private bool _isInitializing = false;
         private Project? _lastSelectedProject = null;
         private Project? _selectedProject = null;
 
@@ -31,7 +32,7 @@ namespace PIDStandardization.UI
             LoadProjects();
         }
 
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // Show project selection dialog at startup
             var projectSelectionDialog = new ProjectSelectionDialog(_unitOfWork);
@@ -49,7 +50,7 @@ namespace PIDStandardization.UI
                     StatusTextBlock.Text = $"Selected project: {_selectedProject.ProjectName}";
 
                     // Pre-populate all tabs with selected project
-                    InitializeTabsWithSelectedProject();
+                    await InitializeTabsWithSelectedProject();
                 }
 
                 // Show welcome screen on first launch (after project selection)
@@ -67,11 +68,12 @@ namespace PIDStandardization.UI
             }
         }
 
-        private async void InitializeTabsWithSelectedProject()
+        private async Task InitializeTabsWithSelectedProject()
         {
             if (_selectedProject == null)
                 return;
 
+            _isInitializing = true;
             try
             {
                 // Load project into all tab ComboBoxes
@@ -98,6 +100,10 @@ namespace PIDStandardization.UI
             {
                 MessageBox.Show($"Error initializing tabs: {ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isInitializing = false;
             }
         }
 
@@ -193,6 +199,8 @@ namespace PIDStandardization.UI
         // Equipment Management Methods
         private async void EquipmentProjectComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_isInitializing) return;
+
             if (EquipmentProjectComboBox.SelectedItem is Project project)
             {
                 EquipmentProjectTaggingModeTextBlock.Text = $"Tagging Mode: {project.TaggingMode}";
@@ -429,6 +437,8 @@ namespace PIDStandardization.UI
 
         private async void LinesProjectComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_isInitializing) return;
+
             if (LinesProjectComboBox.SelectedItem is Project project)
             {
                 LinesProjectTaggingModeTextBlock.Text = $"Tagging Mode: {project.TaggingMode}";
@@ -607,6 +617,8 @@ namespace PIDStandardization.UI
 
         private async void InstrumentsProjectComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_isInitializing) return;
+
             if (InstrumentsProjectComboBox.SelectedItem is Project project)
             {
                 InstrumentsProjectTaggingModeTextBlock.Text = $"Tagging Mode: {project.TaggingMode}";
@@ -787,6 +799,8 @@ namespace PIDStandardization.UI
 
         private async void DrawingsProjectComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_isInitializing) return;
+
             if (DrawingsProjectComboBox.SelectedItem is Project project)
             {
                 DrawingsProjectNameTextBlock.Text = $"Project: {project.ProjectName}";
