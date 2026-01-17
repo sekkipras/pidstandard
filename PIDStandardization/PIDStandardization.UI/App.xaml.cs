@@ -28,7 +28,8 @@ namespace PIDStandardization.UI
             // Database configuration
             var dbConfig = new DatabaseConfiguration();
             services.AddDbContext<PIDDbContext>(options =>
-                options.UseSqlServer(dbConfig.ConnectionString));
+                options.UseSqlServer(dbConfig.ConnectionString)
+                       .UseLazyLoadingProxies()); // Enable lazy loading for navigation properties
 
             // Register repositories and Unit of Work
             services.AddScoped<IUnitOfWork, UnitOfWork>();
