@@ -11,20 +11,64 @@ namespace PIDStandardization.UI.Views
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly Project _project;
+        private readonly Instrument? _existingInstrument;
+        private readonly bool _isEditMode;
 
         public Instrument? SavedInstrument { get; private set; }
 
+        // Constructor for Add mode
         public InstrumentDialog(IUnitOfWork unitOfWork, Project project)
         {
             InitializeComponent();
             _unitOfWork = unitOfWork;
             _project = project;
+            _isEditMode = false;
 
             // Display project info
             ProjectNameTextBlock.Text = project.ProjectName;
 
             // Load equipment and lines list for association dropdowns
             LoadEquipmentAndLinesAsync();
+        }
+
+        // Constructor for Edit mode
+        public InstrumentDialog(IUnitOfWork unitOfWork, Project project, Instrument existingInstrument)
+            : this(unitOfWork, project)
+        {
+            _existingInstrument = existingInstrument;
+            _isEditMode = true;
+
+            Title = "Edit Instrument";
+
+            // Load existing instrument data
+            LoadInstrumentData(existingInstrument);
+        }
+
+        private void LoadInstrumentData(Instrument instrument)
+        {
+            TagNumberTextBox.Text = instrument.TagNumber;
+            InstrumentTypeComboBox.Text = instrument.InstrumentType;
+            MeasurementTypeComboBox.Text = instrument.MeasurementType;
+            RangeMinTextBox.Text = instrument.RangeMin?.ToString();
+            RangeMaxTextBox.Text = instrument.RangeMax?.ToString();
+            UnitsComboBox.Text = instrument.Units;
+            AccuracyTextBox.Text = instrument.Accuracy;
+            ProcessConnectionComboBox.Text = instrument.ProcessConnection;
+            OutputSignalComboBox.Text = instrument.OutputSignal;
+            LoopNumberTextBox.Text = instrument.LoopNumber;
+            LocationTextBox.Text = instrument.Location;
+
+            // Set association radio buttons and selections
+            if (instrument.ParentEquipmentId.HasValue)
+            {
+                AssociateWithEquipmentRadio.IsChecked = true;
+                ParentEquipmentComboBox.SelectedValue = instrument.ParentEquipmentId.Value;
+            }
+            else if (instrument.LineId.HasValue)
+            {
+                AssociateWithLineRadio.IsChecked = true;
+                LineComboBox.SelectedValue = instrument.LineId.Value;
+            }
         }
 
         private async void LoadEquipmentAndLinesAsync()
@@ -103,34 +147,66 @@ namespace PIDStandardization.UI.Views
 
             try
             {
-                // Create instrument
-                var instrument = new Instrument
+                Instrument instrument;
+
+                if (_isEditMode && _existingInstrument != null)
                 {
-                    InstrumentId = Guid.NewGuid(),
-                    ProjectId = _project.ProjectId,
-                    TagNumber = TagNumberTextBox.Text.Trim(),
-                    InstrumentType = InstrumentTypeComboBox.Text,
-                    MeasurementType = MeasurementTypeComboBox.Text,
-                    RangeMin = ParseDecimal(RangeMinTextBox.Text),
-                    RangeMax = ParseDecimal(RangeMaxTextBox.Text),
-                    Units = UnitsComboBox.Text,
-                    Accuracy = AccuracyTextBox.Text,
-                    ProcessConnection = ProcessConnectionComboBox.Text,
-                    OutputSignal = OutputSignalComboBox.Text,
-                    LoopNumber = LoopNumberTextBox.Text,
-                    Location = LocationTextBox.Text,
+                    // Update existing instrument
+                    instrument = _existingInstrument;
+                    instrument.TagNumber = TagNumberTextBox.Text.Trim();
+                    instrument.InstrumentType = InstrumentTypeComboBox.Text;
+                    instrument.MeasurementType = MeasurementTypeComboBox.Text;
+                    instrument.RangeMin = ParseDecimal(RangeMinTextBox.Text);
+                    instrument.RangeMax = ParseDecimal(RangeMaxTextBox.Text);
+                    instrument.Units = UnitsComboBox.Text;
+                    instrument.Accuracy = AccuracyTextBox.Text;
+                    instrument.ProcessConnection = ProcessConnectionComboBox.Text;
+                    instrument.OutputSignal = OutputSignalComboBox.Text;
+                    instrument.LoopNumber = LoopNumberTextBox.Text;
+                    instrument.Location = LocationTextBox.Text;
 
                     // Set either ParentEquipmentId OR LineId based on radio button selection
-                    ParentEquipmentId = AssociateWithEquipmentRadio.IsChecked == true
+                    instrument.ParentEquipmentId = AssociateWithEquipmentRadio.IsChecked == true
                         ? (Guid?)ParentEquipmentComboBox.SelectedValue
-                        : null,
-                    LineId = AssociateWithLineRadio.IsChecked == true
+                        : null;
+                    instrument.LineId = AssociateWithLineRadio.IsChecked == true
                         ? (Guid?)LineComboBox.SelectedValue
-                        : null
-                };
+                        : null;
+
+                    await _unitOfWork.Instruments.UpdateAsync(instrument);
+                }
+                else
+                {
+                    // Create new instrument
+                    instrument = new Instrument
+                    {
+                        InstrumentId = Guid.NewGuid(),
+                        ProjectId = _project.ProjectId,
+                        TagNumber = TagNumberTextBox.Text.Trim(),
+                        InstrumentType = InstrumentTypeComboBox.Text,
+                        MeasurementType = MeasurementTypeComboBox.Text,
+                        RangeMin = ParseDecimal(RangeMinTextBox.Text),
+                        RangeMax = ParseDecimal(RangeMaxTextBox.Text),
+                        Units = UnitsComboBox.Text,
+                        Accuracy = AccuracyTextBox.Text,
+                        ProcessConnection = ProcessConnectionComboBox.Text,
+                        OutputSignal = OutputSignalComboBox.Text,
+                        LoopNumber = LoopNumberTextBox.Text,
+                        Location = LocationTextBox.Text,
+
+                        // Set either ParentEquipmentId OR LineId based on radio button selection
+                        ParentEquipmentId = AssociateWithEquipmentRadio.IsChecked == true
+                            ? (Guid?)ParentEquipmentComboBox.SelectedValue
+                            : null,
+                        LineId = AssociateWithLineRadio.IsChecked == true
+                            ? (Guid?)LineComboBox.SelectedValue
+                            : null
+                    };
+
+                    await _unitOfWork.Instruments.AddAsync(instrument);
+                }
 
                 // Save to database
-                await _unitOfWork.Instruments.AddAsync(instrument);
                 await _unitOfWork.SaveChangesAsync();
 
                 SavedInstrument = instrument;

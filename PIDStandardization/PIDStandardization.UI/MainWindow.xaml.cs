@@ -19,6 +19,7 @@ namespace PIDStandardization.UI
         private bool _isLoadingLinesProjects = false;
         private bool _isLoadingInstrumentsProjects = false;
         private Project? _lastSelectedProject = null;
+        private Project? _selectedProject = null;
 
         public MainWindow(IUnitOfWork unitOfWork, IServiceProvider serviceProvider)
         {
@@ -31,12 +32,71 @@ namespace PIDStandardization.UI
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            // Show welcome screen on first launch
-            if (Properties.Settings.Default.ShowWelcomeScreen)
+            // Show project selection dialog at startup
+            var projectSelectionDialog = new ProjectSelectionDialog(_unitOfWork);
+            projectSelectionDialog.Owner = this;
+
+            if (projectSelectionDialog.ShowDialog() == true)
             {
-                var welcomeDialog = new WelcomeDialog();
-                welcomeDialog.Owner = this;
-                welcomeDialog.ShowDialog();
+                _selectedProject = projectSelectionDialog.SelectedProject;
+                _lastSelectedProject = _selectedProject;
+
+                // Update window title with selected project
+                if (_selectedProject != null)
+                {
+                    Title = $"P&ID Standardization - {_selectedProject.ProjectName}";
+                    StatusTextBlock.Text = $"Selected project: {_selectedProject.ProjectName}";
+
+                    // Pre-populate all tabs with selected project
+                    InitializeTabsWithSelectedProject();
+                }
+
+                // Show welcome screen on first launch (after project selection)
+                if (Properties.Settings.Default.ShowWelcomeScreen)
+                {
+                    var welcomeDialog = new WelcomeDialog();
+                    welcomeDialog.Owner = this;
+                    welcomeDialog.ShowDialog();
+                }
+            }
+            else
+            {
+                // User cancelled project selection - exit application
+                Application.Current.Shutdown();
+            }
+        }
+
+        private async void InitializeTabsWithSelectedProject()
+        {
+            if (_selectedProject == null)
+                return;
+
+            try
+            {
+                // Load project into all tab ComboBoxes
+                var projects = new[] { _selectedProject };
+
+                EquipmentProjectComboBox.ItemsSource = projects;
+                EquipmentProjectComboBox.SelectedIndex = 0;
+
+                LinesProjectComboBox.ItemsSource = projects;
+                LinesProjectComboBox.SelectedIndex = 0;
+
+                InstrumentsProjectComboBox.ItemsSource = projects;
+                InstrumentsProjectComboBox.SelectedIndex = 0;
+
+                DrawingsProjectComboBox.ItemsSource = projects;
+                DrawingsProjectComboBox.SelectedIndex = 0;
+
+                // Load data for Projects tab
+                var allProjects = await _unitOfWork.Projects.GetAllAsync();
+                ProjectsDataGrid.ItemsSource = allProjects;
+                ProjectsDataGrid.SelectedItem = _selectedProject;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error initializing tabs: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -174,7 +234,7 @@ namespace PIDStandardization.UI
             }
         }
 
-        private void EditEquipment_Click(object sender, RoutedEventArgs e)
+        private async void EditEquipment_Click(object sender, RoutedEventArgs e)
         {
             if (EquipmentDataGrid.SelectedItem is not Equipment selectedEquipment)
             {
@@ -195,7 +255,7 @@ namespace PIDStandardization.UI
 
             if (dialog.ShowDialog() == true)
             {
-                LoadEquipmentForProject(selectedProject.ProjectId);
+                await LoadEquipmentForProject(selectedProject.ProjectId);
                 StatusTextBlock.Text = $"Updated equipment: {selectedEquipment.TagNumber}";
             }
         }
@@ -379,7 +439,7 @@ namespace PIDStandardization.UI
             }
         }
 
-        private void EditLine_Click(object sender, RoutedEventArgs e)
+        private async void EditLine_Click(object sender, RoutedEventArgs e)
         {
             if (LinesDataGrid.SelectedItem is not Line selectedLine)
             {
@@ -388,8 +448,20 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            MessageBox.Show("Edit line functionality will be implemented in the next phase.",
-                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (LinesProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Project not found.", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var dialog = new LineDialog(_unitOfWork, selectedProject, selectedLine);
+
+            if (dialog.ShowDialog() == true)
+            {
+                await LoadLinesForProject(selectedProject.ProjectId);
+                StatusTextBlock.Text = $"Updated line: {selectedLine.LineNumber}";
+            }
         }
 
         private async void DeleteLine_Click(object sender, RoutedEventArgs e)
@@ -515,7 +587,7 @@ namespace PIDStandardization.UI
             }
         }
 
-        private void EditInstrument_Click(object sender, RoutedEventArgs e)
+        private async void EditInstrument_Click(object sender, RoutedEventArgs e)
         {
             if (InstrumentsDataGrid.SelectedItem is not Instrument selectedInstrument)
             {
@@ -524,8 +596,20 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            MessageBox.Show("Edit instrument functionality will be implemented in the next phase.",
-                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (InstrumentsProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Project not found.", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var dialog = new InstrumentDialog(_unitOfWork, selectedProject, selectedInstrument);
+
+            if (dialog.ShowDialog() == true)
+            {
+                await LoadInstrumentsForProject(selectedProject.ProjectId);
+                StatusTextBlock.Text = $"Updated instrument: {selectedInstrument.TagNumber}";
+            }
         }
 
         private async void DeleteInstrument_Click(object sender, RoutedEventArgs e)

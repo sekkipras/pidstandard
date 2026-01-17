@@ -1,0 +1,50 @@
+<Window x:Class="PIDStandardization.UI.Views.ProjectSelectionDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Select Project - P&amp;ID Standardization" Height="500" Width="800"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <GroupBox Grid.Row="0" Header="Welcome to P&amp;ID Standardization Application" Margin="0,0,0,10">
+            <TextBlock Text="Please select a project to work with. All equipment, lines, and instruments will be filtered to this project."
+                       TextWrapping="Wrap" Margin="5" FontSize="12"/>
+        </GroupBox>
+
+        <!-- Projects DataGrid -->
+        <GroupBox Grid.Row="1" Header="Available Projects" Margin="0,0,0,10">
+            <DataGrid Name="ProjectsDataGrid"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      MouseDoubleClick="ProjectsDataGrid_MouseDoubleClick"
+                      Margin="5">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Project Name" Binding="{Binding ProjectName}" Width="*"/>
+                    <DataGridTextColumn Header="Project Number" Binding="{Binding ProjectNumber}" Width="150"/>
+                    <DataGridTextColumn Header="Client" Binding="{Binding Client}" Width="200"/>
+                    <DataGridTextColumn Header="Tagging Mode" Binding="{Binding TaggingMode}" Width="120"/>
+                    <DataGridTextColumn Header="Created Date" Binding="{Binding CreatedDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="120"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="New Project" Width="120" Height="35" Margin="5" Click="NewProject_Click"/>
+            <Button Content="Select Project" Width="120" Height="35" Margin="5" Click="SelectProject_Click" IsDefault="True"/>
+            <Button Content="Exit" Width="100" Height="35" Margin="5" Click="Exit_Click" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>
