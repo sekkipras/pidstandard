@@ -112,10 +112,12 @@ PIDStandardization/
 
 ## AutoCAD Plugin Commands
 
-- `PIDEXTRACTDB` - Extract equipment from drawing and save to database
-- `PIDEXTRACT` - Extract equipment (view only)
-- `PIDTAG` - Tag equipment in the drawing
-- `PIDINFO` - Show plugin information
+- `PIDEXTRACTDB` - Extract all equipment from drawing and save to database
+- `PIDTAG` - Tag individual equipment blocks with tag numbers (fully functional)
+- `PIDEXTRACT` - View equipment in drawing (preview mode, no database save)
+- `PIDINFO` - Show plugin information and command list
+
+**Note**: `PIDTAG` is now fully implemented! Tag blocks one-by-one with auto-generation, link to existing equipment, or enter custom tags.
 
 ## Database Migrations
 

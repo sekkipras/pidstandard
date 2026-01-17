@@ -17,7 +17,7 @@ namespace PIDStandardization.AutoCAD.Commands
         /// Usage: PIDTAG
         /// </summary>
         [CommandMethod("PIDTAG")]
-        public void TagEquipment()
+        public async void TagEquipment()
         {
             Document doc = AcApp.DocumentManager.MdiActiveDocument;
             if (doc == null) return;
@@ -27,6 +27,32 @@ namespace PIDStandardization.AutoCAD.Commands
             try
             {
                 ed.WriteMessage("\n=== P&ID Equipment Tagging ===");
+
+                // Get projects from database
+                var unitOfWork = Services.DatabaseService.GetUnitOfWork();
+                var projects = await unitOfWork.Projects.GetAllAsync();
+
+                if (!projects.Any())
+                {
+                    ed.WriteMessage("\nNo projects found in database. Please create a project first in the WPF application.");
+                    return;
+                }
+
+                // Show project selection dialog
+                Forms.ProjectSelectionForm projectForm = new Forms.ProjectSelectionForm(projects);
+                if (projectForm.ShowDialog() != System.Windows.Forms.DialogResult.OK || projectForm.SelectedProject == null)
+                {
+                    ed.WriteMessage("\nCommand cancelled.");
+                    return;
+                }
+
+                var selectedProject = projectForm.SelectedProject;
+                ed.WriteMessage($"\nSelected project: {selectedProject.ProjectName}");
+
+                // Get all equipment for this project
+                var allEquipment = await unitOfWork.Equipment.FindAsync(e => e.ProjectId == selectedProject.ProjectId && e.IsActive);
+                ed.WriteMessage($"\nFound {allEquipment.Count()} existing equipment in database.");
+
                 ed.WriteMessage("\nSelect equipment block to tag...");
 
                 // Prompt user to select a block
@@ -51,13 +77,64 @@ namespace PIDStandardization.AutoCAD.Commands
                         ed.WriteMessage($"\nSelected block: {blockRef.Name}");
                         ed.WriteMessage($"\nPosition: X={blockRef.Position.X:F2}, Y={blockRef.Position.Y:F2}");
 
-                        // TODO: Open dialog to assign tag number from database
-                        ed.WriteMessage("\n[Feature under development: Tag assignment dialog will open here]");
+                        // Generate suggested tag number
+                        string suggestedTag = $"{blockRef.Name}-001";
 
-                        // For now, just add extended data to mark this as tagged
+                        // Count existing equipment with similar names to suggest next number
+                        var similarEquipment = allEquipment.Where(e => e.TagNumber.StartsWith(blockRef.Name)).ToList();
+                        if (similarEquipment.Any())
+                        {
+                            int maxNum = 0;
+                            foreach (var eq in similarEquipment)
+                            {
+                                var parts = eq.TagNumber.Split('-');
+                                if (parts.Length > 1 && int.TryParse(parts[parts.Length - 1], out int num))
+                                {
+                                    maxNum = Math.Max(maxNum, num);
+                                }
+                            }
+                            suggestedTag = $"{blockRef.Name}-{(maxNum + 1):D3}";
+                        }
+
+                        // Show tag assignment dialog
+                        Forms.TagAssignmentForm tagForm = new Forms.TagAssignmentForm(allEquipment, blockRef.Name, suggestedTag);
+                        if (tagForm.ShowDialog() != System.Windows.Forms.DialogResult.OK || string.IsNullOrEmpty(tagForm.SelectedTagNumber))
+                        {
+                            ed.WriteMessage("\nTag assignment cancelled.");
+                            tr.Commit();
+                            return;
+                        }
+
+                        string assignedTag = tagForm.SelectedTagNumber;
+                        ed.WriteMessage($"\nAssigned tag: {assignedTag}");
+
+                        // Write tag to block attribute
                         BlockReference blockRefWrite = tr.GetObject(per.ObjectId, OpenMode.ForWrite) as BlockReference;
                         if (blockRefWrite != null)
                         {
+                            // Try to find and update TAG or TAGNUMBER attribute
+                            bool attributeUpdated = false;
+                            AttributeCollection attCol = blockRefWrite.AttributeCollection;
+
+                            foreach (ObjectId attId in attCol)
+                            {
+                                AttributeReference attRef = tr.GetObject(attId, OpenMode.ForRead) as AttributeReference;
+                                if (attRef != null && (attRef.Tag.ToUpper() == "TAG" || attRef.Tag.ToUpper() == "TAGNUMBER"))
+                                {
+                                    attRef.UpgradeOpen();
+                                    attRef.TextString = assignedTag;
+                                    attributeUpdated = true;
+                                    ed.WriteMessage($"\nUpdated attribute '{attRef.Tag}' with tag number.");
+                                    break;
+                                }
+                            }
+
+                            if (!attributeUpdated)
+                            {
+                                ed.WriteMessage("\nWarning: Block has no TAG or TAGNUMBER attribute to update.");
+                                ed.WriteMessage("\nTag will be saved to database but not visible in drawing.");
+                            }
+
                             // Add application name to RegAppTable if not exists
                             RegAppTable rat = tr.GetObject(doc.Database.RegAppTableId, OpenMode.ForRead) as RegAppTable;
                             if (!rat.Has("PIDSTD"))
@@ -69,15 +146,45 @@ namespace PIDStandardization.AutoCAD.Commands
                                 tr.AddNewlyCreatedDBObject(ratr, true);
                             }
 
-                            // Add extended data
+                            // Add extended data with tag information
                             ResultBuffer rb = new ResultBuffer(
                                 new TypedValue((int)DxfCode.ExtendedDataRegAppName, "PIDSTD"),
                                 new TypedValue((int)DxfCode.ExtendedDataAsciiString, "TAGGED"),
-                                new TypedValue((int)DxfCode.ExtendedDataAsciiString, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
+                                new TypedValue((int)DxfCode.ExtendedDataAsciiString, DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")),
+                                new TypedValue((int)DxfCode.ExtendedDataAsciiString, assignedTag)
                             );
 
                             blockRefWrite.XData = rb;
-                            ed.WriteMessage("\nBlock marked as tagged.");
+                            ed.WriteMessage("\nBlock marked as tagged in extended data.");
+                        }
+
+                        // If not using existing equipment, create new equipment in database
+                        if (!tagForm.UseExistingEquipment)
+                        {
+                            ed.WriteMessage("\nCreating new equipment in database...");
+
+                            var equipment = new Core.Entities.Equipment
+                            {
+                                EquipmentId = Guid.NewGuid(),
+                                ProjectId = selectedProject.ProjectId,
+                                TagNumber = assignedTag,
+                                EquipmentType = GetEquipmentTypeFromBlockName(blockRef.Name),
+                                Description = $"Tagged from block {blockRef.Name}",
+                                Area = blockRef.Layer,
+                                SourceBlockName = blockRef.Name,
+                                Status = Core.Enums.EquipmentStatus.Planned,
+                                CreatedDate = DateTime.UtcNow,
+                                IsActive = true
+                            };
+
+                            await unitOfWork.Equipment.AddAsync(equipment);
+                            await unitOfWork.SaveChangesAsync();
+
+                            ed.WriteMessage($"\nEquipment '{assignedTag}' created in database.");
+                        }
+                        else
+                        {
+                            ed.WriteMessage($"\nUsing existing equipment '{assignedTag}' from database.");
                         }
                     }
 
@@ -90,6 +197,30 @@ namespace PIDStandardization.AutoCAD.Commands
             {
                 ed.WriteMessage($"\nError: {ex.Message}");
             }
+        }
+
+        private string GetEquipmentTypeFromBlockName(string blockName)
+        {
+            string upperBlock = blockName.ToUpper();
+
+            if (upperBlock.Contains("PUMP") || upperBlock.Contains("PMP") || upperBlock.StartsWith("P-"))
+                return "Pump";
+            if (upperBlock.Contains("VALVE") || upperBlock.Contains("VLV") || upperBlock.StartsWith("V-"))
+                return "Valve";
+            if (upperBlock.Contains("TANK") || upperBlock.StartsWith("TK") || upperBlock.StartsWith("T-"))
+                return "Tank";
+            if (upperBlock.Contains("VESSEL") || upperBlock.Contains("VSL") || upperBlock.StartsWith("VS"))
+                return "Vessel";
+            if (upperBlock.Contains("HX") || upperBlock.Contains("HEAT") || upperBlock.Contains("EXCHANGER"))
+                return "Heat Exchanger";
+            if (upperBlock.Contains("FILTER") || upperBlock.Contains("FLT") || upperBlock.StartsWith("F-"))
+                return "Filter";
+            if (upperBlock.Contains("COMPRESSOR") || upperBlock.Contains("COMP") || upperBlock.StartsWith("C-"))
+                return "Compressor";
+            if (upperBlock.Contains("SEPARATOR") || upperBlock.Contains("SEP") || upperBlock.StartsWith("S-"))
+                return "Separator";
+
+            return "Equipment";
         }
 
         /// <summary>

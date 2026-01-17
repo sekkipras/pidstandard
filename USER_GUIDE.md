@@ -94,10 +94,12 @@ All process parameters support multiple units via dropdown:
 
 #### From AutoCAD Drawing
 1. Open AutoCAD with the P&ID drawing
-2. Run the `EXTRACTPID` command in AutoCAD
-3. Select blocks representing equipment
+2. Run the `PIDEXTRACTDB` command in AutoCAD
+3. Select the project and (optionally) the source drawing
 4. The equipment will be automatically extracted and added to the database
 5. Review and edit the extracted equipment in the Equipment tab
+
+Alternatively, use `PIDTAG` to tag equipment one block at a time as you design
 
 ### Editing Equipment
 1. Select equipment from the grid
@@ -247,40 +249,61 @@ Custom mode allows flexible tagging for equipment:
 
 ### Available Commands
 
-#### EXTRACTPID
-Extracts equipment from selected blocks in the drawing.
+#### PIDEXTRACTDB
+Extracts all equipment from the current drawing and saves to database.
 
 **Usage:**
-1. Type `EXTRACTPID` and press Enter
-2. Select blocks representing equipment
-3. Press Enter to complete selection
-4. Equipment data is extracted and saved to the database
-5. Open the P&ID Standardization Application to review
+1. Type `PIDEXTRACTDB` and press Enter
+2. Select a project from the dialog
+3. (Optional) Select a source drawing
+4. All equipment blocks are automatically extracted
+5. Equipment data is saved to the database
+6. Open the P&ID Standardization Application to review
 
-#### PIDCONFIG
-Configure connection to the database.
+**What gets extracted:**
+- Block name and position
+- TAG or TAGNUMBER attributes (if present)
+- All other attributes (description, manufacturer, etc.)
+- Layer information
+- Drawing reference
 
-**Usage:**
-1. Type `PIDCONFIG` and press Enter
-2. Enter the database connection string when prompted
-3. Configuration is saved
-
-#### PIDVALIDATE
-Validate tags in the current drawing against project standards.
-
-**Usage:**
-1. Type `PIDVALIDATE` and press Enter
-2. Select blocks to validate
-3. Validation results are displayed
-
-#### PIDLEARN
-Teach the system to recognize new block types.
+#### PIDTAG
+Tag individual equipment blocks with tag numbers.
 
 **Usage:**
-1. Type `PIDLEARN` and press Enter
-2. Select a block
-3. Enter the equipment type when prompted
-4. The system learns this block pattern for future extractions
+1. Type `PIDTAG` and press Enter
+2. Select a project from the dialog
+3. Click on an equipment block in the drawing
+4. In the Tag Assignment dialog, choose one of:
+   - **Use existing equipment**: Link to equipment already in database
+   - **Auto-generate**: Use suggested tag number (e.g., PUMP-001)
+   - **Custom tag**: Enter your own tag number
+5. Click OK
+6. The tag number is:
+   - Written to the block's TAG attribute (if it has one)
+   - Saved to the database
+   - Marked in extended data for tracking
+
+**Use cases:**
+- Tag equipment one-by-one as you design
+- Link drawing blocks to existing equipment database records
+- Quickly assign tags to new equipment
+
+#### PIDEXTRACT
+View equipment in the drawing without saving to database.
+
+**Usage:**
+1. Type `PIDEXTRACT` and press Enter
+2. Equipment list is displayed in command line
+3. No database changes are made
+4. Useful for previewing what will be extracted
+
+#### PIDINFO
+Display plugin information and available commands.
+
+**Usage:**
+1. Type `PIDINFO` and press Enter
+2. Plugin version and command list is displayed
 
 ---
 
