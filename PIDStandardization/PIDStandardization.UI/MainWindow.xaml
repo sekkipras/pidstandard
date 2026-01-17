@@ -193,8 +193,22 @@
                             <DataGridTextColumn Header="Schedule" Binding="{Binding PipeSchedule}" Width="100"/>
                             <DataGridTextColumn Header="From Equipment" Binding="{Binding FromEquipment.TagNumber}" Width="130"/>
                             <DataGridTextColumn Header="To Equipment" Binding="{Binding ToEquipment.TagNumber}" Width="130"/>
-                            <DataGridTextColumn Header="Design Pressure" Binding="{Binding DesignPressure}" Width="120"/>
-                            <DataGridTextColumn Header="Design Temp" Binding="{Binding DesignTemperature}" Width="110"/>
+                            <DataGridTextColumn Header="Design Pressure" Width="130">
+                                <DataGridTextColumn.Binding>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="DesignPressure"/>
+                                        <Binding Path="DesignPressureUnit"/>
+                                    </MultiBinding>
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Design Temp" Width="120">
+                                <DataGridTextColumn.Binding>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="DesignTemperature"/>
+                                        <Binding Path="DesignTemperatureUnit"/>
+                                    </MultiBinding>
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
