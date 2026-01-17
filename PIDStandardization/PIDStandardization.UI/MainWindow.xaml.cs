@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using PIDStandardization.Core.Entities;
 using PIDStandardization.Core.Interfaces;
+using PIDStandardization.Services;
 using PIDStandardization.Services.TaggingServices;
 using PIDStandardization.UI.Views;
 using System.Windows;
@@ -294,10 +295,40 @@ namespace PIDStandardization.UI
             }
         }
 
-        private void ExportEquipment_Click(object sender, RoutedEventArgs e)
+        private async void ExportEquipment_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Export equipment to Excel will be implemented in the next phase.",
-                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (EquipmentProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                FileName = $"Equipment_{selectedProject.ProjectName}_{DateTime.Now:yyyyMMdd}.xlsx",
+                Title = "Export Equipment to Excel"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var equipment = await _unitOfWork.Equipment.FindAsync(e => e.ProjectId == selectedProject.ProjectId);
+                    var excelService = new ExcelExportService();
+                    excelService.ExportEquipment(equipment, saveFileDialog.FileName, selectedProject.ProjectName);
+
+                    StatusTextBlock.Text = $"Exported {equipment.Count()} equipment items to Excel";
+                    MessageBox.Show($"Equipment list exported successfully!\n\nFile: {saveFileDialog.FileName}",
+                        "Export Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error exporting equipment: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         private async void RefreshEquipment_Click(object sender, RoutedEventArgs e)
@@ -497,10 +528,40 @@ namespace PIDStandardization.UI
             }
         }
 
-        private void ExportLines_Click(object sender, RoutedEventArgs e)
+        private async void ExportLines_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Export lines to Excel will be implemented in the next phase.",
-                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (LinesProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                FileName = $"Lines_{selectedProject.ProjectName}_{DateTime.Now:yyyyMMdd}.xlsx",
+                Title = "Export Lines to Excel"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var lines = await _unitOfWork.Lines.FindAsync(l => l.ProjectId == selectedProject.ProjectId);
+                    var excelService = new ExcelExportService();
+                    excelService.ExportLines(lines, saveFileDialog.FileName, selectedProject.ProjectName);
+
+                    StatusTextBlock.Text = $"Exported {lines.Count()} lines to Excel";
+                    MessageBox.Show($"Lines list exported successfully!\n\nFile: {saveFileDialog.FileName}",
+                        "Export Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error exporting lines: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         private async void RefreshLines_Click(object sender, RoutedEventArgs e)
@@ -645,10 +706,40 @@ namespace PIDStandardization.UI
             }
         }
 
-        private void ExportInstruments_Click(object sender, RoutedEventArgs e)
+        private async void ExportInstruments_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Export instruments to Excel will be implemented in the next phase.",
-                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (InstrumentsProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                FileName = $"Instruments_{selectedProject.ProjectName}_{DateTime.Now:yyyyMMdd}.xlsx",
+                Title = "Export Instruments to Excel"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var instruments = await _unitOfWork.Instruments.FindAsync(i => i.ProjectId == selectedProject.ProjectId);
+                    var excelService = new ExcelExportService();
+                    excelService.ExportInstruments(instruments, saveFileDialog.FileName, selectedProject.ProjectName);
+
+                    StatusTextBlock.Text = $"Exported {instruments.Count()} instruments to Excel";
+                    MessageBox.Show($"Instruments list exported successfully!\n\nFile: {saveFileDialog.FileName}",
+                        "Export Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error exporting instruments: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         private async void RefreshInstruments_Click(object sender, RoutedEventArgs e)
@@ -861,10 +952,40 @@ namespace PIDStandardization.UI
             }
         }
 
-        private void ExportDrawingList_Click(object sender, RoutedEventArgs e)
+        private async void ExportDrawingList_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Export drawing list to Excel will be implemented in the next phase.",
-                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (DrawingsProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                FileName = $"Drawings_{selectedProject.ProjectName}_{DateTime.Now:yyyyMMdd}.xlsx",
+                Title = "Export Drawings List to Excel"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var drawings = await _unitOfWork.Drawings.FindAsync(d => d.ProjectId == selectedProject.ProjectId);
+                    var excelService = new ExcelExportService();
+                    excelService.ExportDrawings(drawings, saveFileDialog.FileName, selectedProject.ProjectName);
+
+                    StatusTextBlock.Text = $"Exported {drawings.Count()} drawings to Excel";
+                    MessageBox.Show($"Drawings list exported successfully!\n\nFile: {saveFileDialog.FileName}",
+                        "Export Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error exporting drawings: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         private async void DeleteDrawing_Click(object sender, RoutedEventArgs e)
