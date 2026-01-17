@@ -30,6 +30,18 @@ namespace PIDStandardization.UI.Views
 
             // Update title based on tagging mode
             Title = $"Add Equipment - {project.TaggingMode} Tagging Mode";
+
+            // Load equipment list for connectivity dropdown
+            LoadEquipmentListAsync();
+        }
+
+        private async void LoadEquipmentListAsync()
+        {
+            var allEquipment = await _unitOfWork.Equipment
+                .FindAsync(e => e.ProjectId == _project.ProjectId && e.IsActive);
+
+            UpstreamEquipmentComboBox.ItemsSource = allEquipment;
+            DownstreamEquipmentComboBox.ItemsSource = allEquipment;
         }
 
         private async void ValidateTag_Click(object sender, RoutedEventArgs e)
@@ -154,6 +166,25 @@ namespace PIDStandardization.UI.Views
                     Status = status,
                     Manufacturer = ManufacturerTextBox.Text,
                     Model = ModelTextBox.Text,
+
+                    // Connectivity (optional fields)
+                    UpstreamEquipmentId = (Guid?)UpstreamEquipmentComboBox.SelectedValue,
+                    DownstreamEquipmentId = (Guid?)DownstreamEquipmentComboBox.SelectedValue,
+
+                    // Process parameters (optional fields)
+                    OperatingPressure = ParseDecimal(OperatingPressureTextBox.Text),
+                    OperatingPressureUnit = OperatingPressureUnitComboBox.Text,
+                    OperatingTemperature = ParseDecimal(OperatingTemperatureTextBox.Text),
+                    OperatingTemperatureUnit = OperatingTemperatureUnitComboBox.Text,
+                    FlowRate = ParseDecimal(FlowRateTextBox.Text),
+                    FlowRateUnit = FlowRateUnitComboBox.Text,
+                    DesignPressure = ParseDecimal(DesignPressureTextBox.Text),
+                    DesignPressureUnit = DesignPressureUnitComboBox.Text,
+                    DesignTemperature = ParseDecimal(DesignTemperatureTextBox.Text),
+                    DesignTemperatureUnit = DesignTemperatureUnitComboBox.Text,
+                    PowerOrCapacity = ParseDecimal(PowerOrCapacityTextBox.Text),
+                    PowerOrCapacityUnit = PowerOrCapacityUnitComboBox.Text,
+
                     CreatedDate = DateTime.UtcNow,
                     IsActive = true
                 };
@@ -177,6 +208,17 @@ namespace PIDStandardization.UI.Views
         {
             DialogResult = false;
             Close();
+        }
+
+        private decimal? ParseDecimal(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return null;
+
+            if (decimal.TryParse(input, out decimal result))
+                return result;
+
+            return null;
         }
     }
 }

@@ -76,6 +76,33 @@ namespace PIDStandardization.Data.Context
                       .OnDelete(DeleteBehavior.NoAction);
 
                 entity.Property(e => e.SourceBlockName).HasMaxLength(100);
+
+                // Process parameter configurations
+                entity.Property(e => e.OperatingPressure).HasPrecision(18, 2);
+                entity.Property(e => e.OperatingPressureUnit).HasMaxLength(20);
+                entity.Property(e => e.OperatingTemperature).HasPrecision(18, 2);
+                entity.Property(e => e.OperatingTemperatureUnit).HasMaxLength(20);
+                entity.Property(e => e.FlowRate).HasPrecision(18, 2);
+                entity.Property(e => e.FlowRateUnit).HasMaxLength(20);
+
+                entity.Property(e => e.DesignPressure).HasPrecision(18, 2);
+                entity.Property(e => e.DesignPressureUnit).HasMaxLength(20);
+                entity.Property(e => e.DesignTemperature).HasPrecision(18, 2);
+                entity.Property(e => e.DesignTemperatureUnit).HasMaxLength(20);
+
+                entity.Property(e => e.PowerOrCapacity).HasPrecision(18, 2);
+                entity.Property(e => e.PowerOrCapacityUnit).HasMaxLength(20);
+
+                // Equipment connectivity relationships
+                entity.HasOne(e => e.UpstreamEquipment)
+                      .WithMany(e => e.DownstreamConnections)
+                      .HasForeignKey(e => e.UpstreamEquipmentId)
+                      .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
+
+                entity.HasOne(e => e.DownstreamEquipment)
+                      .WithMany(e => e.UpstreamConnections)
+                      .HasForeignKey(e => e.DownstreamEquipmentId)
+                      .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
             });
         }
 
@@ -156,6 +183,12 @@ namespace PIDStandardization.Data.Context
                 entity.HasOne(e => e.ParentEquipment)
                       .WithMany()
                       .HasForeignKey(e => e.ParentEquipmentId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Line relationship (instrument can be installed on a line)
+                entity.HasOne(e => e.Line)
+                      .WithMany()
+                      .HasForeignKey(e => e.LineId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
         }

@@ -23,6 +23,7 @@ namespace PIDStandardization.Core.Entities
         public string? Location { get; set; }
 
         public Guid? ParentEquipmentId { get; set; }
+        public Guid? LineId { get; set; }  // Instrument can be installed on a Line OR associated with Equipment
 
         public string? Manufacturer { get; set; }
         public string? Model { get; set; }
@@ -34,6 +35,7 @@ namespace PIDStandardization.Core.Entities
         // Navigation properties
         public virtual Project? Project { get; set; }
         public virtual Equipment? ParentEquipment { get; set; }
+        public virtual Line? Line { get; set; }
         public virtual Drawing? Drawing { get; set; }
     }
 }

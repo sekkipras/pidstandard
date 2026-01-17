@@ -28,6 +28,28 @@ namespace PIDStandardization.Core.Entities
         public string? SerialNumber { get; set; }
         public DateTime? InstallationDate { get; set; }
 
+        // Process Parameters - Operating Conditions
+        public decimal? OperatingPressure { get; set; }
+        public string? OperatingPressureUnit { get; set; } // bar, psi, kPa, MPa
+        public decimal? OperatingTemperature { get; set; }
+        public string? OperatingTemperatureUnit { get; set; } // C, F, K
+        public decimal? FlowRate { get; set; }
+        public string? FlowRateUnit { get; set; } // m3/h, L/min, gpm, kg/h
+
+        // Process Parameters - Design Conditions
+        public decimal? DesignPressure { get; set; }
+        public string? DesignPressureUnit { get; set; }
+        public decimal? DesignTemperature { get; set; }
+        public string? DesignTemperatureUnit { get; set; }
+
+        // Equipment Capacity/Power
+        public decimal? PowerOrCapacity { get; set; }
+        public string? PowerOrCapacityUnit { get; set; } // kW, HP, m3, L, tons
+
+        // Equipment Connectivity (for valves, control points, etc.)
+        public Guid? UpstreamEquipmentId { get; set; }
+        public Guid? DownstreamEquipmentId { get; set; }
+
         /// <summary>
         /// JSON string for flexible attributes
         /// </summary>
@@ -46,5 +68,9 @@ namespace PIDStandardization.Core.Entities
         // Navigation properties
         public virtual Project? Project { get; set; }
         public virtual Drawing? SourceDrawing { get; set; }
+        public virtual Equipment? UpstreamEquipment { get; set; }
+        public virtual Equipment? DownstreamEquipment { get; set; }
+        public virtual ICollection<Equipment>? DownstreamConnections { get; set; }
+        public virtual ICollection<Equipment>? UpstreamConnections { get; set; }
     }
 }
