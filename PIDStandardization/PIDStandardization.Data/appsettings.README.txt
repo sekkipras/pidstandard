@@ -1,0 +1,108 @@
+================================================================================
+  PIDStandardization Database Configuration
+================================================================================
+
+This appsettings.json file contains the database connection configuration used
+by both the WPF application and the AutoCAD plugin.
+
+IMPORTANT: Both applications share this configuration file to ensure they
+connect to the same database.
+
+================================================================================
+  Configuration Options
+================================================================================
+
+ConnectionString:
+  The SQL Server connection string.
+
+  Default: "Server=localhost\\SQLEXPRESS;Database=PIDStandardization;Trusted_Connection=True;TrustServerCertificate=True;"
+
+  Common Configurations:
+
+  1. Local SQL Server Express (Default):
+     "Server=localhost\\SQLEXPRESS;Database=PIDStandardization;Trusted_Connection=True;TrustServerCertificate=True;"
+
+  2. Local SQL Server (full edition):
+     "Server=localhost;Database=PIDStandardization;Trusted_Connection=True;TrustServerCertificate=True;"
+
+  3. Network SQL Server with Windows Authentication:
+     "Server=SERVERNAME\\INSTANCE;Database=PIDStandardization;Trusted_Connection=True;TrustServerCertificate=True;"
+
+  4. Network SQL Server with SQL Authentication:
+     "Server=SERVERNAME;Database=PIDStandardization;User Id=USERNAME;Password=PASSWORD;TrustServerCertificate=True;"
+
+  5. SQL Server LocalDB:
+     "Server=(localdb)\\MSSQLLocalDB;Database=PIDStandardization;Trusted_Connection=True;TrustServerCertificate=True;"
+
+EnableSensitiveDataLogging:
+  Set to true to log SQL queries in debug output (development only).
+
+  Default: false
+  Recommended for Production: false
+
+CommandTimeout:
+  Timeout in seconds for database commands.
+
+  Default: 30
+  Recommended: 30-60 seconds
+
+================================================================================
+  How to Change the Connection String
+================================================================================
+
+1. Close both the WPF application and AutoCAD (if plugin is loaded)
+
+2. Open appsettings.json in a text editor (Notepad, VS Code, etc.)
+
+3. Modify the "ConnectionString" value to match your SQL Server configuration
+
+4. Save the file
+
+5. Start the application - it will now use the new connection string
+
+================================================================================
+  Troubleshooting
+================================================================================
+
+Problem: "Cannot open database" error
+Solution: Ensure SQL Server is running and the server name is correct
+
+Problem: "Login failed for user" error
+Solution: Check username/password or use Trusted_Connection=True for Windows Auth
+
+Problem: "A network-related or instance-specific error"
+Solution:
+  - Verify SQL Server is running
+  - Check firewall settings
+  - Ensure TCP/IP is enabled in SQL Server Configuration Manager
+
+Problem: Configuration changes not taking effect
+Solution:
+  - Ensure you edited the appsettings.json in the SAME folder as the .exe
+  - Restart the application after changing configuration
+  - For AutoCAD: Unload and reload the plugin (NETUNLOAD, NETLOAD)
+
+================================================================================
+  File Locations
+================================================================================
+
+WPF Application:
+  C:\Program Files\PIDStandardization\appsettings.json
+
+AutoCAD Plugin:
+  C:\Program Files\PIDStandardization\AutoCAD_Plugin\appsettings.json
+  (Or wherever you installed the plugin)
+
+IMPORTANT: If you have both locations, keep them synchronized or the
+applications may connect to different databases!
+
+================================================================================
+  Security Notes
+================================================================================
+
+- Never use SQL Authentication with hardcoded passwords in production
+- Use Windows Authentication (Trusted_Connection=True) when possible
+- Restrict file permissions on appsettings.json to prevent unauthorized access
+- For network deployments, use encrypted connections where possible
+
+================================================================================

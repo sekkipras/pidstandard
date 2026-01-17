@@ -29,6 +29,19 @@ A comprehensive Windows desktop application for managing P&ID equipment tagging 
 3. Follow the installation wizard
 4. Launch the application from Start Menu or Desktop
 
+### Database Configuration
+
+The application uses a shared configuration file (`appsettings.json`) for database connectivity.
+
+**Default Location**: `C:\Program Files\PIDStandardization\appsettings.json`
+
+**To change database connection**:
+1. Close the application
+2. Edit `appsettings.json` with your SQL Server details
+3. Restart the application
+
+For detailed configuration instructions, see [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md)
+
 ### For Developers
 
 1. Clone this repository
@@ -145,8 +158,19 @@ For issues or questions:
 
 ## Version History
 
-### Version 1.0.0 (Current)
+### Version 1.1.0 (Current)
+- Added configurable database connection via `appsettings.json`
+- Shared configuration between WPF app and AutoCAD plugin
+- Lazy loading enabled for navigation properties
+- Fixed critical code quality issues
+- Comprehensive configuration guide added
+
+### Version 1.0.0
 - Initial release
+- Equipment, Lines, and Instruments management
+- AutoCAD 2026 integration
+- Drawing assignment functionality
+- User guide and documentation
 - Project and equipment management
 - AutoCAD integration
 - Drawing version control

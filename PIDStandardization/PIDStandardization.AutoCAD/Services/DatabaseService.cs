@@ -23,7 +23,8 @@ namespace PIDStandardization.AutoCAD.Services
             {
                 var config = new DatabaseConfiguration();
                 var optionsBuilder = new DbContextOptionsBuilder<PIDDbContext>();
-                optionsBuilder.UseSqlServer(config.ConnectionString);
+                optionsBuilder.UseSqlServer(config.ConnectionString)
+                              .UseLazyLoadingProxies(); // Enable lazy loading for navigation properties
 
                 _dbContext = new PIDDbContext(optionsBuilder.Options);
                 _unitOfWork = new UnitOfWork(_dbContext);

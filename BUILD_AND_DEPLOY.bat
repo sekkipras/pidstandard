@@ -36,6 +36,13 @@ echo Step 4: Copying files to Deployment_Package...
 copy /Y "Published\PIDStandardization.UI.exe" "Deployment_Package\"
 xcopy /Y /E /I "PIDStandardization\PIDStandardization.AutoCAD\bin\Release\net8.0-windows\win-x64\*" "Deployment_Package\AutoCAD_Plugin\"
 
+REM Copy configuration files
+echo Copying configuration files...
+copy /Y "PIDStandardization\PIDStandardization.Data\appsettings.json" "Deployment_Package\"
+copy /Y "PIDStandardization\PIDStandardization.Data\appsettings.json" "Deployment_Package\AutoCAD_Plugin\"
+copy /Y "PIDStandardization\PIDStandardization.Data\appsettings.README.txt" "Deployment_Package\"
+copy /Y "CONFIGURATION_GUIDE.md" "Deployment_Package\"
+
 REM Check if Inno Setup is installed
 echo.
 echo Step 5: Creating installer...
