@@ -16,6 +16,8 @@ namespace PIDStandardization.UI
         private readonly IUnitOfWork _unitOfWork;
         private readonly IServiceProvider _serviceProvider;
         private bool _isLoadingEquipmentProjects = false;
+        private bool _isLoadingLinesProjects = false;
+        private bool _isLoadingInstrumentsProjects = false;
         private Project? _lastSelectedProject = null;
 
         public MainWindow(IUnitOfWork unitOfWork, IServiceProvider serviceProvider)
@@ -188,7 +190,15 @@ namespace PIDStandardization.UI
                 {
                     await LoadEquipmentProjectsAsync();
                 }
-                else if (MainTabControl.SelectedIndex == 2) // Drawings tab
+                else if (MainTabControl.SelectedIndex == 2) // Lines tab
+                {
+                    await LoadLinesProjectsAsync();
+                }
+                else if (MainTabControl.SelectedIndex == 3) // Instruments tab
+                {
+                    await LoadInstrumentsProjectsAsync();
+                }
+                else if (MainTabControl.SelectedIndex == 4) // Drawings tab
                 {
                     await LoadDrawingsProjectsAsync();
                 }
@@ -224,6 +234,278 @@ namespace PIDStandardization.UI
             finally
             {
                 _isLoadingEquipmentProjects = false;
+            }
+        }
+
+        // Lines Management Methods
+        private async Task LoadLinesProjectsAsync()
+        {
+            if (_isLoadingLinesProjects)
+                return;
+
+            _isLoadingLinesProjects = true;
+            try
+            {
+                var projects = await _unitOfWork.Projects.GetAllAsync();
+                LinesProjectComboBox.ItemsSource = projects;
+
+                // Select the last selected project from Projects tab, or first project if none selected
+                if (_lastSelectedProject != null && projects.Any(p => p.ProjectId == _lastSelectedProject.ProjectId))
+                {
+                    LinesProjectComboBox.SelectedItem = projects.First(p => p.ProjectId == _lastSelectedProject.ProjectId);
+                }
+                else if (projects.Any())
+                {
+                    LinesProjectComboBox.SelectedIndex = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading projects: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isLoadingLinesProjects = false;
+            }
+        }
+
+        private async void LinesProjectComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (LinesProjectComboBox.SelectedItem is Project project)
+            {
+                LinesProjectTaggingModeTextBlock.Text = $"Tagging Mode: {project.TaggingMode}";
+                await LoadLinesForProject(project.ProjectId);
+            }
+        }
+
+        private async Task LoadLinesForProject(Guid projectId)
+        {
+            try
+            {
+                var lines = await _unitOfWork.Lines.FindAsync(l => l.ProjectId == projectId);
+                LinesDataGrid.ItemsSource = lines;
+                StatusTextBlock.Text = $"Loaded {lines.Count()} line(s)";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading lines: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                StatusTextBlock.Text = "Error loading lines";
+            }
+        }
+
+        private async void AddLine_Click(object sender, RoutedEventArgs e)
+        {
+            if (LinesProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var dialog = new LineDialog(_unitOfWork, selectedProject);
+
+            if (dialog.ShowDialog() == true)
+            {
+                await LoadLinesForProject(selectedProject.ProjectId);
+                StatusTextBlock.Text = $"Added line: {dialog.SavedLine?.LineNumber}";
+            }
+        }
+
+        private void EditLine_Click(object sender, RoutedEventArgs e)
+        {
+            if (LinesDataGrid.SelectedItem is not Line selectedLine)
+            {
+                MessageBox.Show("Please select a line first.", "No Line Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            MessageBox.Show("Edit line functionality will be implemented in the next phase.",
+                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private async void DeleteLine_Click(object sender, RoutedEventArgs e)
+        {
+            if (LinesDataGrid.SelectedItem is not Line selectedLine)
+            {
+                MessageBox.Show("Please select a line first.", "No Line Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Are you sure you want to delete the line '{selectedLine.LineNumber}'?",
+                "Confirm Delete",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    await _unitOfWork.Lines.DeleteAsync(selectedLine);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    await LoadLinesForProject(selectedLine.ProjectId);
+                    StatusTextBlock.Text = $"Deleted line: {selectedLine.LineNumber}";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error deleting line: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ExportLines_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Export lines to Excel will be implemented in the next phase.",
+                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private async void RefreshLines_Click(object sender, RoutedEventArgs e)
+        {
+            if (LinesProjectComboBox.SelectedItem is Project project)
+            {
+                await LoadLinesForProject(project.ProjectId);
+            }
+        }
+
+        // Instruments Management Methods
+        private async Task LoadInstrumentsProjectsAsync()
+        {
+            if (_isLoadingInstrumentsProjects)
+                return;
+
+            _isLoadingInstrumentsProjects = true;
+            try
+            {
+                var projects = await _unitOfWork.Projects.GetAllAsync();
+                InstrumentsProjectComboBox.ItemsSource = projects;
+
+                // Select the last selected project from Projects tab, or first project if none selected
+                if (_lastSelectedProject != null && projects.Any(p => p.ProjectId == _lastSelectedProject.ProjectId))
+                {
+                    InstrumentsProjectComboBox.SelectedItem = projects.First(p => p.ProjectId == _lastSelectedProject.ProjectId);
+                }
+                else if (projects.Any())
+                {
+                    InstrumentsProjectComboBox.SelectedIndex = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading projects: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isLoadingInstrumentsProjects = false;
+            }
+        }
+
+        private async void InstrumentsProjectComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (InstrumentsProjectComboBox.SelectedItem is Project project)
+            {
+                InstrumentsProjectTaggingModeTextBlock.Text = $"Tagging Mode: {project.TaggingMode}";
+                await LoadInstrumentsForProject(project.ProjectId);
+            }
+        }
+
+        private async Task LoadInstrumentsForProject(Guid projectId)
+        {
+            try
+            {
+                var instruments = await _unitOfWork.Instruments.FindAsync(i => i.ProjectId == projectId);
+                InstrumentsDataGrid.ItemsSource = instruments;
+                StatusTextBlock.Text = $"Loaded {instruments.Count()} instrument(s)";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading instruments: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                StatusTextBlock.Text = "Error loading instruments";
+            }
+        }
+
+        private async void AddInstrument_Click(object sender, RoutedEventArgs e)
+        {
+            if (InstrumentsProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var dialog = new InstrumentDialog(_unitOfWork, selectedProject);
+
+            if (dialog.ShowDialog() == true)
+            {
+                await LoadInstrumentsForProject(selectedProject.ProjectId);
+                StatusTextBlock.Text = $"Added instrument: {dialog.SavedInstrument?.TagNumber}";
+            }
+        }
+
+        private void EditInstrument_Click(object sender, RoutedEventArgs e)
+        {
+            if (InstrumentsDataGrid.SelectedItem is not Instrument selectedInstrument)
+            {
+                MessageBox.Show("Please select an instrument first.", "No Instrument Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            MessageBox.Show("Edit instrument functionality will be implemented in the next phase.",
+                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private async void DeleteInstrument_Click(object sender, RoutedEventArgs e)
+        {
+            if (InstrumentsDataGrid.SelectedItem is not Instrument selectedInstrument)
+            {
+                MessageBox.Show("Please select an instrument first.", "No Instrument Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Are you sure you want to delete the instrument '{selectedInstrument.TagNumber}'?",
+                "Confirm Delete",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    await _unitOfWork.Instruments.DeleteAsync(selectedInstrument);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    await LoadInstrumentsForProject(selectedInstrument.ProjectId);
+                    StatusTextBlock.Text = $"Deleted instrument: {selectedInstrument.TagNumber}";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error deleting instrument: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ExportInstruments_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Export instruments to Excel will be implemented in the next phase.",
+                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private async void RefreshInstruments_Click(object sender, RoutedEventArgs e)
+        {
+            if (InstrumentsProjectComboBox.SelectedItem is Project project)
+            {
+                await LoadInstrumentsForProject(project.ProjectId);
             }
         }
 

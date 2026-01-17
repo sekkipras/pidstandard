@@ -119,6 +119,113 @@
                 </Grid>
             </TabItem>
 
+            <TabItem Header="Lines">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Project Selection -->
+                    <GroupBox Grid.Row="0" Header="Select Project" Margin="5">
+                        <Grid Margin="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox Grid.Column="0" Name="LinesProjectComboBox"
+                                      DisplayMemberPath="ProjectName"
+                                      SelectionChanged="LinesProjectComboBox_SelectionChanged"
+                                      Height="25" Margin="0,0,5,0"/>
+                            <TextBlock Grid.Column="1" Name="LinesProjectTaggingModeTextBlock"
+                                       VerticalAlignment="Center" FontWeight="Bold" Foreground="DarkBlue"
+                                       Margin="10,0,0,0"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- Toolbar -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5">
+                        <Button Content="Add Line" Width="100" Height="30" Margin="5" Click="AddLine_Click"/>
+                        <Button Content="Edit Line" Width="100" Height="30" Margin="5" Click="EditLine_Click"/>
+                        <Button Content="Delete Line" Width="100" Height="30" Margin="5" Click="DeleteLine_Click"/>
+                        <Button Content="Export to Excel" Width="120" Height="30" Margin="5" Click="ExportLines_Click"/>
+                        <Button Content="Refresh" Width="80" Height="30" Margin="5" Click="RefreshLines_Click"/>
+                    </StackPanel>
+
+                    <!-- Lines DataGrid -->
+                    <DataGrid Grid.Row="2" Margin="5" Name="LinesDataGrid"
+                              AutoGenerateColumns="False" IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Line Number" Binding="{Binding LineNumber}" Width="150"/>
+                            <DataGridTextColumn Header="Service" Binding="{Binding Service}" Width="*"/>
+                            <DataGridTextColumn Header="Fluid Type" Binding="{Binding FluidType}" Width="120"/>
+                            <DataGridTextColumn Header="Size" Binding="{Binding NominalSize}" Width="80"/>
+                            <DataGridTextColumn Header="Material Spec" Binding="{Binding MaterialSpec}" Width="120"/>
+                            <DataGridTextColumn Header="Schedule" Binding="{Binding PipeSchedule}" Width="100"/>
+                            <DataGridTextColumn Header="From Equipment" Binding="{Binding FromEquipment.TagNumber}" Width="130"/>
+                            <DataGridTextColumn Header="To Equipment" Binding="{Binding ToEquipment.TagNumber}" Width="130"/>
+                            <DataGridTextColumn Header="Design Pressure" Binding="{Binding DesignPressure}" Width="120"/>
+                            <DataGridTextColumn Header="Design Temp" Binding="{Binding DesignTemperature}" Width="110"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Instruments">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Project Selection -->
+                    <GroupBox Grid.Row="0" Header="Select Project" Margin="5">
+                        <Grid Margin="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox Grid.Column="0" Name="InstrumentsProjectComboBox"
+                                      DisplayMemberPath="ProjectName"
+                                      SelectionChanged="InstrumentsProjectComboBox_SelectionChanged"
+                                      Height="25" Margin="0,0,5,0"/>
+                            <TextBlock Grid.Column="1" Name="InstrumentsProjectTaggingModeTextBlock"
+                                       VerticalAlignment="Center" FontWeight="Bold" Foreground="DarkBlue"
+                                       Margin="10,0,0,0"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- Toolbar -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5">
+                        <Button Content="Add Instrument" Width="120" Height="30" Margin="5" Click="AddInstrument_Click"/>
+                        <Button Content="Edit Instrument" Width="120" Height="30" Margin="5" Click="EditInstrument_Click"/>
+                        <Button Content="Delete Instrument" Width="130" Height="30" Margin="5" Click="DeleteInstrument_Click"/>
+                        <Button Content="Export to Excel" Width="120" Height="30" Margin="5" Click="ExportInstruments_Click"/>
+                        <Button Content="Refresh" Width="80" Height="30" Margin="5" Click="RefreshInstruments_Click"/>
+                    </StackPanel>
+
+                    <!-- Instruments DataGrid -->
+                    <DataGrid Grid.Row="2" Margin="5" Name="InstrumentsDataGrid"
+                              AutoGenerateColumns="False" IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Tag Number" Binding="{Binding TagNumber}" Width="150"/>
+                            <DataGridTextColumn Header="Type" Binding="{Binding InstrumentType}" Width="120"/>
+                            <DataGridTextColumn Header="Measurement" Binding="{Binding MeasurementType}" Width="120"/>
+                            <DataGridTextColumn Header="Range Min" Binding="{Binding RangeMin}" Width="100"/>
+                            <DataGridTextColumn Header="Range Max" Binding="{Binding RangeMax}" Width="100"/>
+                            <DataGridTextColumn Header="Units" Binding="{Binding Units}" Width="80"/>
+                            <DataGridTextColumn Header="Accuracy" Binding="{Binding Accuracy}" Width="100"/>
+                            <DataGridTextColumn Header="Equipment" Binding="{Binding ParentEquipment.TagNumber}" Width="130"/>
+                            <DataGridTextColumn Header="Line" Binding="{Binding Line.LineNumber}" Width="130"/>
+                            <DataGridTextColumn Header="Loop Number" Binding="{Binding LoopNumber}" Width="100"/>
+                            <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
             <TabItem Header="Drawings">
                 <Grid>
                     <Grid.RowDefinitions>
