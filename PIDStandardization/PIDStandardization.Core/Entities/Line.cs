@@ -18,7 +18,9 @@ namespace PIDStandardization.Core.Entities
         public string? PipeSchedule { get; set; }
 
         public decimal? DesignPressure { get; set; }
+        public string? DesignPressureUnit { get; set; }
         public decimal? DesignTemperature { get; set; }
+        public string? DesignTemperatureUnit { get; set; }
 
         public bool InsulationRequired { get; set; }
         public string? InsulationType { get; set; }

@@ -174,6 +174,72 @@ namespace PIDStandardization.UI
             }
         }
 
+        private void EditEquipment_Click(object sender, RoutedEventArgs e)
+        {
+            if (EquipmentDataGrid.SelectedItem is not Equipment selectedEquipment)
+            {
+                MessageBox.Show("Please select equipment first.", "No Equipment Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (EquipmentProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Project not found.", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var tagValidationService = _serviceProvider.GetRequiredService<ITagValidationService>();
+            var dialog = new EquipmentDialog(_unitOfWork, tagValidationService, selectedProject, selectedEquipment);
+
+            if (dialog.ShowDialog() == true)
+            {
+                LoadEquipmentForProject(selectedProject.ProjectId);
+                StatusTextBlock.Text = $"Updated equipment: {selectedEquipment.TagNumber}";
+            }
+        }
+
+        private async void DeleteEquipment_Click(object sender, RoutedEventArgs e)
+        {
+            if (EquipmentDataGrid.SelectedItem is not Equipment selectedEquipment)
+            {
+                MessageBox.Show("Please select equipment first.", "No Equipment Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Are you sure you want to delete equipment '{selectedEquipment.TagNumber}'?\n\n" +
+                "This will also unlink it from any lines and instruments.",
+                "Confirm Delete",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    await _unitOfWork.Equipment.DeleteAsync(selectedEquipment);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    await LoadEquipmentForProject(selectedEquipment.ProjectId);
+                    StatusTextBlock.Text = $"Deleted equipment: {selectedEquipment.TagNumber}";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error deleting equipment: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ExportEquipment_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Export equipment to Excel will be implemented in the next phase.",
+                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
         private async void RefreshEquipment_Click(object sender, RoutedEventArgs e)
         {
             if (EquipmentProjectComboBox.SelectedItem is Project project)

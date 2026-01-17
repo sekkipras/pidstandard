@@ -100,6 +100,9 @@
                     <!-- Toolbar -->
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5">
                         <Button Content="Add Equipment" Width="120" Height="30" Margin="5" Click="AddEquipment_Click"/>
+                        <Button Content="Edit Equipment" Width="120" Height="30" Margin="5" Click="EditEquipment_Click"/>
+                        <Button Content="Delete Equipment" Width="130" Height="30" Margin="5" Click="DeleteEquipment_Click"/>
+                        <Button Content="Export to Excel" Width="120" Height="30" Margin="5" Click="ExportEquipment_Click"/>
                         <Button Content="Refresh" Width="80" Height="30" Margin="5" Click="RefreshEquipment_Click"/>
                     </StackPanel>
 

@@ -14,15 +14,19 @@ namespace PIDStandardization.UI.Views
         private readonly IUnitOfWork _unitOfWork;
         private readonly ITagValidationService _tagValidationService;
         private readonly Project _project;
+        private readonly Equipment? _existingEquipment;
+        private readonly bool _isEditMode;
 
         public Equipment? SavedEquipment { get; private set; }
 
+        // Constructor for Add mode
         public EquipmentDialog(IUnitOfWork unitOfWork, ITagValidationService tagValidationService, Project project)
         {
             InitializeComponent();
             _unitOfWork = unitOfWork;
             _tagValidationService = tagValidationService;
             _project = project;
+            _isEditMode = false;
 
             // Display project info
             ProjectNameTextBlock.Text = project.ProjectName;
@@ -33,6 +37,65 @@ namespace PIDStandardization.UI.Views
 
             // Load equipment list for connectivity dropdown
             LoadEquipmentListAsync();
+        }
+
+        // Constructor for Edit mode
+        public EquipmentDialog(IUnitOfWork unitOfWork, ITagValidationService tagValidationService, Project project, Equipment existingEquipment)
+            : this(unitOfWork, tagValidationService, project)
+        {
+            _existingEquipment = existingEquipment;
+            _isEditMode = true;
+
+            Title = $"Edit Equipment - {project.TaggingMode} Tagging Mode";
+
+            // Load existing equipment data into form
+            LoadEquipmentData(existingEquipment);
+        }
+
+        private void LoadEquipmentData(Equipment equipment)
+        {
+            TagNumberTextBox.Text = equipment.TagNumber;
+            EquipmentTypeComboBox.Text = equipment.EquipmentType;
+            DescriptionTextBox.Text = equipment.Description;
+            ServiceTextBox.Text = equipment.Service;
+            AreaTextBox.Text = equipment.Area;
+
+            // Set status
+            StatusComboBox.SelectedIndex = equipment.Status switch
+            {
+                EquipmentStatus.Planned => 0,
+                EquipmentStatus.Installed => 1,
+                EquipmentStatus.Commissioned => 2,
+                EquipmentStatus.Decommissioned => 3,
+                _ => 0
+            };
+
+            ManufacturerTextBox.Text = equipment.Manufacturer;
+            ModelTextBox.Text = equipment.Model;
+
+            // Process parameters
+            OperatingPressureTextBox.Text = equipment.OperatingPressure?.ToString();
+            OperatingPressureUnitComboBox.Text = equipment.OperatingPressureUnit ?? "bar";
+            OperatingTemperatureTextBox.Text = equipment.OperatingTemperature?.ToString();
+            OperatingTemperatureUnitComboBox.Text = equipment.OperatingTemperatureUnit ?? "°C";
+            FlowRateTextBox.Text = equipment.FlowRate?.ToString();
+            FlowRateUnitComboBox.Text = equipment.FlowRateUnit ?? "m³/h";
+            DesignPressureTextBox.Text = equipment.DesignPressure?.ToString();
+            DesignPressureUnitComboBox.Text = equipment.DesignPressureUnit ?? "bar";
+            DesignTemperatureTextBox.Text = equipment.DesignTemperature?.ToString();
+            DesignTemperatureUnitComboBox.Text = equipment.DesignTemperatureUnit ?? "°C";
+            PowerOrCapacityTextBox.Text = equipment.PowerOrCapacity?.ToString();
+            PowerOrCapacityUnitComboBox.Text = equipment.PowerOrCapacityUnit ?? "kW";
+
+            // Connectivity - will be set after equipment list loads
+            if (equipment.UpstreamEquipmentId.HasValue)
+            {
+                UpstreamEquipmentComboBox.SelectedValue = equipment.UpstreamEquipmentId.Value;
+            }
+            if (equipment.DownstreamEquipmentId.HasValue)
+            {
+                DownstreamEquipmentComboBox.SelectedValue = equipment.DownstreamEquipmentId.Value;
+            }
         }
 
         private async void LoadEquipmentListAsync()
@@ -153,44 +216,85 @@ namespace PIDStandardization.UI.Views
                     _ => EquipmentStatus.Planned
                 };
 
-                // Create equipment
-                var equipment = new Equipment
+                Equipment equipment;
+
+                if (_isEditMode && _existingEquipment != null)
                 {
-                    EquipmentId = Guid.NewGuid(),
-                    ProjectId = _project.ProjectId,
-                    TagNumber = TagNumberTextBox.Text.Trim(),
-                    EquipmentType = EquipmentTypeComboBox.Text,
-                    Description = DescriptionTextBox.Text,
-                    Service = ServiceTextBox.Text,
-                    Area = AreaTextBox.Text,
-                    Status = status,
-                    Manufacturer = ManufacturerTextBox.Text,
-                    Model = ModelTextBox.Text,
+                    // Update existing equipment
+                    equipment = _existingEquipment;
+                    equipment.TagNumber = TagNumberTextBox.Text.Trim();
+                    equipment.EquipmentType = EquipmentTypeComboBox.Text;
+                    equipment.Description = DescriptionTextBox.Text;
+                    equipment.Service = ServiceTextBox.Text;
+                    equipment.Area = AreaTextBox.Text;
+                    equipment.Status = status;
+                    equipment.Manufacturer = ManufacturerTextBox.Text;
+                    equipment.Model = ModelTextBox.Text;
 
-                    // Connectivity (optional fields)
-                    UpstreamEquipmentId = (Guid?)UpstreamEquipmentComboBox.SelectedValue,
-                    DownstreamEquipmentId = (Guid?)DownstreamEquipmentComboBox.SelectedValue,
+                    // Connectivity
+                    equipment.UpstreamEquipmentId = (Guid?)UpstreamEquipmentComboBox.SelectedValue;
+                    equipment.DownstreamEquipmentId = (Guid?)DownstreamEquipmentComboBox.SelectedValue;
 
-                    // Process parameters (optional fields)
-                    OperatingPressure = ParseDecimal(OperatingPressureTextBox.Text),
-                    OperatingPressureUnit = OperatingPressureUnitComboBox.Text,
-                    OperatingTemperature = ParseDecimal(OperatingTemperatureTextBox.Text),
-                    OperatingTemperatureUnit = OperatingTemperatureUnitComboBox.Text,
-                    FlowRate = ParseDecimal(FlowRateTextBox.Text),
-                    FlowRateUnit = FlowRateUnitComboBox.Text,
-                    DesignPressure = ParseDecimal(DesignPressureTextBox.Text),
-                    DesignPressureUnit = DesignPressureUnitComboBox.Text,
-                    DesignTemperature = ParseDecimal(DesignTemperatureTextBox.Text),
-                    DesignTemperatureUnit = DesignTemperatureUnitComboBox.Text,
-                    PowerOrCapacity = ParseDecimal(PowerOrCapacityTextBox.Text),
-                    PowerOrCapacityUnit = PowerOrCapacityUnitComboBox.Text,
+                    // Process parameters
+                    equipment.OperatingPressure = ParseDecimal(OperatingPressureTextBox.Text);
+                    equipment.OperatingPressureUnit = OperatingPressureUnitComboBox.Text;
+                    equipment.OperatingTemperature = ParseDecimal(OperatingTemperatureTextBox.Text);
+                    equipment.OperatingTemperatureUnit = OperatingTemperatureUnitComboBox.Text;
+                    equipment.FlowRate = ParseDecimal(FlowRateTextBox.Text);
+                    equipment.FlowRateUnit = FlowRateUnitComboBox.Text;
+                    equipment.DesignPressure = ParseDecimal(DesignPressureTextBox.Text);
+                    equipment.DesignPressureUnit = DesignPressureUnitComboBox.Text;
+                    equipment.DesignTemperature = ParseDecimal(DesignTemperatureTextBox.Text);
+                    equipment.DesignTemperatureUnit = DesignTemperatureUnitComboBox.Text;
+                    equipment.PowerOrCapacity = ParseDecimal(PowerOrCapacityTextBox.Text);
+                    equipment.PowerOrCapacityUnit = PowerOrCapacityUnitComboBox.Text;
 
-                    CreatedDate = DateTime.UtcNow,
-                    IsActive = true
-                };
+                    equipment.ModifiedDate = DateTime.UtcNow;
+
+                    await _unitOfWork.Equipment.UpdateAsync(equipment);
+                }
+                else
+                {
+                    // Create new equipment
+                    equipment = new Equipment
+                    {
+                        EquipmentId = Guid.NewGuid(),
+                        ProjectId = _project.ProjectId,
+                        TagNumber = TagNumberTextBox.Text.Trim(),
+                        EquipmentType = EquipmentTypeComboBox.Text,
+                        Description = DescriptionTextBox.Text,
+                        Service = ServiceTextBox.Text,
+                        Area = AreaTextBox.Text,
+                        Status = status,
+                        Manufacturer = ManufacturerTextBox.Text,
+                        Model = ModelTextBox.Text,
+
+                        // Connectivity (optional fields)
+                        UpstreamEquipmentId = (Guid?)UpstreamEquipmentComboBox.SelectedValue,
+                        DownstreamEquipmentId = (Guid?)DownstreamEquipmentComboBox.SelectedValue,
+
+                        // Process parameters (optional fields)
+                        OperatingPressure = ParseDecimal(OperatingPressureTextBox.Text),
+                        OperatingPressureUnit = OperatingPressureUnitComboBox.Text,
+                        OperatingTemperature = ParseDecimal(OperatingTemperatureTextBox.Text),
+                        OperatingTemperatureUnit = OperatingTemperatureUnitComboBox.Text,
+                        FlowRate = ParseDecimal(FlowRateTextBox.Text),
+                        FlowRateUnit = FlowRateUnitComboBox.Text,
+                        DesignPressure = ParseDecimal(DesignPressureTextBox.Text),
+                        DesignPressureUnit = DesignPressureUnitComboBox.Text,
+                        DesignTemperature = ParseDecimal(DesignTemperatureTextBox.Text),
+                        DesignTemperatureUnit = DesignTemperatureUnitComboBox.Text,
+                        PowerOrCapacity = ParseDecimal(PowerOrCapacityTextBox.Text),
+                        PowerOrCapacityUnit = PowerOrCapacityUnitComboBox.Text,
+
+                        CreatedDate = DateTime.UtcNow,
+                        IsActive = true
+                    };
+
+                    await _unitOfWork.Equipment.AddAsync(equipment);
+                }
 
                 // Save to database
-                await _unitOfWork.Equipment.AddAsync(equipment);
                 await _unitOfWork.SaveChangesAsync();
 
                 SavedEquipment = equipment;

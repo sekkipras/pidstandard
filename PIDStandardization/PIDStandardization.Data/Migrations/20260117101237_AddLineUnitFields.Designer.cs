@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PIDStandardization.Data.Context;
 
@@ -11,9 +12,11 @@ using PIDStandardization.Data.Context;
 namespace PIDStandardization.Data.Migrations
 {
     [DbContext(typeof(PIDDbContext))]
-    partial class PIDDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260117101237_AddLineUnitFields")]
+    partial class AddLineUnitFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

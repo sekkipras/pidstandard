@@ -139,6 +139,10 @@ namespace PIDStandardization.Data.Context
                 entity.Property(e => e.Length).HasPrecision(18, 4);
                 entity.Property(e => e.InsulationThickness).HasPrecision(18, 4);
 
+                // Unit fields for design conditions
+                entity.Property(e => e.DesignPressureUnit).HasMaxLength(20);
+                entity.Property(e => e.DesignTemperatureUnit).HasMaxLength(20);
+
                 // Unique constraint on LineNumber per Project
                 entity.HasIndex(e => new { e.ProjectId, e.LineNumber }).IsUnique();
 
