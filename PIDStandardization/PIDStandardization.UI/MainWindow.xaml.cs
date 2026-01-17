@@ -34,7 +34,11 @@ namespace PIDStandardization.UI
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // Show project selection dialog at startup
-            var projectSelectionDialog = new ProjectSelectionDialog(_unitOfWork);
+            // Create a new scope to get a fresh UnitOfWork instance
+            using var scope = _serviceProvider.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+            var projectSelectionDialog = new ProjectSelectionDialog(unitOfWork);
             projectSelectionDialog.Owner = this;
 
             if (projectSelectionDialog.ShowDialog() == true)
@@ -113,7 +117,11 @@ namespace PIDStandardization.UI
         private void OpenProject_Click(object sender, RoutedEventArgs e)
         {
             // Show project selection dialog
-            var projectSelectionDialog = new ProjectSelectionDialog(_unitOfWork);
+            // Create a new scope to get a fresh UnitOfWork instance
+            using var scope = _serviceProvider.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+            var projectSelectionDialog = new ProjectSelectionDialog(unitOfWork);
             projectSelectionDialog.Owner = this;
 
             if (projectSelectionDialog.ShowDialog() == true && projectSelectionDialog.SelectedProject != null)
@@ -212,8 +220,11 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            var tagValidationService = _serviceProvider.GetRequiredService<ITagValidationService>();
-            var dialog = new EquipmentDialog(_unitOfWork, tagValidationService, selectedProject);
+            using var scope = _serviceProvider.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var tagValidationService = scope.ServiceProvider.GetRequiredService<ITagValidationService>();
+
+            var dialog = new EquipmentDialog(unitOfWork, tagValidationService, selectedProject);
 
             if (dialog.ShowDialog() == true)
             {
@@ -238,8 +249,11 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            var tagValidationService = _serviceProvider.GetRequiredService<ITagValidationService>();
-            var dialog = new EquipmentDialog(_unitOfWork, tagValidationService, selectedProject, selectedEquipment);
+            using var scope = _serviceProvider.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var tagValidationService = scope.ServiceProvider.GetRequiredService<ITagValidationService>();
+
+            var dialog = new EquipmentDialog(unitOfWork, tagValidationService, selectedProject, selectedEquipment);
 
             if (dialog.ShowDialog() == true)
             {
@@ -450,7 +464,10 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            var dialog = new LineDialog(_unitOfWork, selectedProject);
+            using var scope = _serviceProvider.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+            var dialog = new LineDialog(unitOfWork, selectedProject);
 
             if (dialog.ShowDialog() == true)
             {
@@ -475,7 +492,10 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            var dialog = new LineDialog(_unitOfWork, selectedProject, selectedLine);
+            using var scope = _serviceProvider.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+            var dialog = new LineDialog(unitOfWork, selectedProject, selectedLine);
 
             if (dialog.ShowDialog() == true)
             {
@@ -630,7 +650,10 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            var dialog = new InstrumentDialog(_unitOfWork, selectedProject);
+            using var scope = _serviceProvider.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+            var dialog = new InstrumentDialog(unitOfWork, selectedProject);
 
             if (dialog.ShowDialog() == true)
             {
@@ -655,7 +678,10 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            var dialog = new InstrumentDialog(_unitOfWork, selectedProject, selectedInstrument);
+            using var scope = _serviceProvider.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+            var dialog = new InstrumentDialog(unitOfWork, selectedProject, selectedInstrument);
 
             if (dialog.ShowDialog() == true)
             {
