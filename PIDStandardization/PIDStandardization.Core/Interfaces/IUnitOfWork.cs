@@ -13,6 +13,7 @@ namespace PIDStandardization.Core.Interfaces
         IRepository<Line> Lines { get; }
         IRepository<Instrument> Instruments { get; }
         IRepository<ValidationRule> ValidationRules { get; }
+        IRepository<BlockMapping> BlockMappings { get; }
 
         Task<int> SaveChangesAsync();
         Task BeginTransactionAsync();

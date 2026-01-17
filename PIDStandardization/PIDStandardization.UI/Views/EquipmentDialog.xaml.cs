@@ -36,7 +36,7 @@ namespace PIDStandardization.UI.Views
             Title = $"Add Equipment - {project.TaggingMode} Tagging Mode";
 
             // Load equipment list for connectivity dropdown
-            LoadEquipmentListAsync();
+            Loaded += async (s, e) => await LoadEquipmentListAsync();
         }
 
         // Constructor for Edit mode
@@ -98,13 +98,13 @@ namespace PIDStandardization.UI.Views
             }
 
             // Drawing assignment
-            if (equipment.DrawingId.HasValue)
+            if (equipment.DrawingId.HasValue && SourceDrawingComboBox != null)
             {
                 SourceDrawingComboBox.SelectedValue = equipment.DrawingId.Value;
             }
         }
 
-        private async void LoadEquipmentListAsync()
+        private async Task LoadEquipmentListAsync()
         {
             var allEquipment = await _unitOfWork.Equipment
                 .FindAsync(e => e.ProjectId == _project.ProjectId && e.IsActive);

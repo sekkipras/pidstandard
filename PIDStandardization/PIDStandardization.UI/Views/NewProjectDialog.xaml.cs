@@ -45,8 +45,8 @@ namespace PIDStandardization.UI.Views
                     ProjectNumber = ProjectNumberTextBox.Text.Trim(),
                     Client = ClientTextBox.Text.Trim(),
                     TaggingMode = taggingMode,
-                    CreatedDate = DateTime.Now,
-                    ModifiedDate = DateTime.Now
+                    CreatedDate = DateTime.UtcNow,
+                    ModifiedDate = DateTime.UtcNow
                 };
 
                 // Save to database
