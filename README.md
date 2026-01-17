@@ -112,12 +112,17 @@ PIDStandardization/
 
 ## AutoCAD Plugin Commands
 
-- `PIDEXTRACTDB` - Extract all equipment from drawing and save to database
-- `PIDTAG` - Tag individual equipment blocks with tag numbers (fully functional)
+- `PIDEXTRACTDB` - Extract all equipment from drawing and save to database (with block learning)
+- `PIDTAG` - Tag individual equipment blocks with auto-generation, existing equipment linking, or custom tags
+- `PIDSYNC` - Bi-directional synchronization between drawing and database with smart conflict resolution
 - `PIDEXTRACT` - View equipment in drawing (preview mode, no database save)
 - `PIDINFO` - Show plugin information and command list
 
-**Note**: `PIDTAG` is now fully implemented! Tag blocks one-by-one with auto-generation, link to existing equipment, or enter custom tags.
+**Key Features**:
+- **Block Learning System**: Automatically learns equipment types from block names, improving accuracy over time
+- **Smart Tag Generation**: Auto-generates sequential tag numbers based on existing equipment
+- **Bi-directional Sync**: Keep drawing and database in perfect sync with PIDSYNC command
+- **Extended Data Tracking**: Uses AutoCAD XDATA to track tagged blocks
 
 ## Database Migrations
 
@@ -164,6 +169,10 @@ For issues or questions:
 - Added configurable database connection via `appsettings.json`
 - Shared configuration between WPF app and AutoCAD plugin
 - Lazy loading enabled for navigation properties
+- **PIDTAG command**: Tag individual equipment blocks with auto-generation and database linking
+- **PIDSYNC command**: Bi-directional synchronization between drawing and database
+- **Block Learning System**: Intelligent equipment type detection that improves over time
+- Multi-AutoCAD version support documentation
 - Fixed critical code quality issues
 - Comprehensive configuration guide added
 

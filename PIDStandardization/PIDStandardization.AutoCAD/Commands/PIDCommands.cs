@@ -322,6 +322,11 @@ namespace PIDStandardization.AutoCAD.Commands
                 var equipmentList = extractionService.ExtractEquipmentFromDrawing(doc.Database);
 
                 ed.WriteMessage($"\nFound {equipmentList.Count} equipment items");
+
+                // Initialize block learning service
+                var blockLearner = new BlockLearningService();
+                ed.WriteMessage("\nUsing block learning for equipment type detection...");
+
                 ed.WriteMessage("\nSaving to database...");
 
                 int savedCount = 0;
@@ -358,13 +363,31 @@ namespace PIDStandardization.AutoCAD.Commands
                         continue;
                     }
 
+                    // Get equipment type using block learning if available
+                    var suggestion = blockLearner.GetSuggestion(extracted.BlockName);
+                    string equipmentType;
+
+                    if (suggestion.Confidence > 0.5)
+                    {
+                        // Use learned suggestion
+                        equipmentType = suggestion.SuggestedEquipmentType;
+                    }
+                    else
+                    {
+                        // Fall back to pattern matching
+                        equipmentType = extracted.GetEquipmentType();
+
+                        // Learn this mapping for future use
+                        blockLearner.LearnMapping(extracted.BlockName, equipmentType, userConfirmed: false);
+                    }
+
                     // Create new equipment
                     var equipment = new Core.Entities.Equipment
                     {
                         EquipmentId = Guid.NewGuid(),
                         ProjectId = selectedProject.ProjectId,
                         TagNumber = tagNumber,
-                        EquipmentType = extracted.GetEquipmentType(),
+                        EquipmentType = equipmentType,
                         Description = $"Extracted from drawing at ({extracted.Position.X:F2}, {extracted.Position.Y:F2})",
                         Area = extracted.Layer,
                         Status = Core.Enums.EquipmentStatus.Planned,
@@ -377,6 +400,8 @@ namespace PIDStandardization.AutoCAD.Commands
                     await unitOfWork.Equipment.AddAsync(equipment);
                     savedCount++;
                 }
+
+                // Note: Block learning mappings are saved automatically in LearnMapping() method
 
                 await unitOfWork.SaveChangesAsync();
 
@@ -422,16 +447,178 @@ namespace PIDStandardization.AutoCAD.Commands
         /// Usage: PIDSYNC
         /// </summary>
         [CommandMethod("PIDSYNC")]
-        public void SyncWithDatabase()
+        public async void SyncWithDatabase()
         {
             Document doc = AcApp.DocumentManager.MdiActiveDocument;
             if (doc == null) return;
 
             Editor ed = doc.Editor;
 
-            ed.WriteMessage("\n=== Synchronize Drawing with Database ===");
-            ed.WriteMessage("\n[Feature under development]");
-            ed.WriteMessage("\nThis will sync tagged equipment with the central database.");
+            try
+            {
+                ed.WriteMessage("\n=== Synchronize Drawing with Database ===");
+
+                // Get projects from database
+                var unitOfWork = Services.DatabaseService.GetUnitOfWork();
+                var projects = await unitOfWork.Projects.GetAllAsync();
+
+                if (!projects.Any())
+                {
+                    ed.WriteMessage("\nNo projects found in database. Please create a project first in the WPF application.");
+                    return;
+                }
+
+                // Show project selection dialog
+                Forms.ProjectSelectionForm projectForm = new Forms.ProjectSelectionForm(projects);
+                if (projectForm.ShowDialog() != System.Windows.Forms.DialogResult.OK || projectForm.SelectedProject == null)
+                {
+                    ed.WriteMessage("\nCommand cancelled.");
+                    return;
+                }
+
+                var selectedProject = projectForm.SelectedProject;
+                ed.WriteMessage($"\nSelected project: {selectedProject.ProjectName}");
+
+                // Get all equipment for this project from database
+                var databaseEquipment = (await unitOfWork.Equipment.FindAsync(e => e.ProjectId == selectedProject.ProjectId && e.IsActive)).ToList();
+                ed.WriteMessage($"\nFound {databaseEquipment.Count} equipment in database.");
+
+                // Extract equipment from current drawing
+                var extractionService = new EquipmentExtractionService();
+                var drawingEquipment = extractionService.ExtractEquipmentFromDrawing(doc.Database);
+                ed.WriteMessage($"\nFound {drawingEquipment.Count} equipment in drawing.");
+
+                // Analyze differences
+                var drawingTags = new Dictionary<string, Models.ExtractedEquipment>();
+                foreach (var eq in drawingEquipment)
+                {
+                    // Get tag from attributes or block name
+                    string tag = eq.Attributes.ContainsKey("TAG") ? eq.Attributes["TAG"] :
+                                eq.Attributes.ContainsKey("TAGNUMBER") ? eq.Attributes["TAGNUMBER"] :
+                                eq.BlockName;
+
+                    if (!string.IsNullOrWhiteSpace(tag))
+                    {
+                        drawingTags[tag] = eq;
+                    }
+                }
+
+                var databaseTags = databaseEquipment.ToDictionary(e => e.TagNumber, e => e);
+
+                // Find equipment in drawing but not in database
+                var newInDrawing = drawingTags.Keys.Except(databaseTags.Keys).ToList();
+
+                // Find equipment in database but not in drawing
+                var missingInDrawing = databaseTags.Keys.Except(drawingTags.Keys).ToList();
+
+                // Find equipment in both (potential updates)
+                var inBoth = drawingTags.Keys.Intersect(databaseTags.Keys).ToList();
+
+                ed.WriteMessage("\n\n=== Sync Analysis ===");
+                ed.WriteMessage($"\nNew equipment in drawing: {newInDrawing.Count}");
+                ed.WriteMessage($"\nEquipment missing from drawing: {missingInDrawing.Count}");
+                ed.WriteMessage($"\nEquipment in both: {inBoth.Count}");
+
+                if (newInDrawing.Count == 0 && missingInDrawing.Count == 0)
+                {
+                    ed.WriteMessage("\n\nDrawing and database are already synchronized!");
+                    return;
+                }
+
+                // Show detailed differences
+                if (newInDrawing.Any())
+                {
+                    ed.WriteMessage("\n\nNew equipment in drawing (will be added to database):");
+                    foreach (var tag in newInDrawing.Take(10))
+                    {
+                        ed.WriteMessage($"\n  - {tag} ({drawingTags[tag].BlockName})");
+                    }
+                    if (newInDrawing.Count > 10)
+                        ed.WriteMessage($"\n  ... and {newInDrawing.Count - 10} more");
+                }
+
+                if (missingInDrawing.Any())
+                {
+                    ed.WriteMessage("\n\nEquipment in database but not in drawing:");
+                    foreach (var tag in missingInDrawing.Take(10))
+                    {
+                        ed.WriteMessage($"\n  - {tag} ({databaseTags[tag].EquipmentType})");
+                    }
+                    if (missingInDrawing.Count > 10)
+                        ed.WriteMessage($"\n  ... and {missingInDrawing.Count - 10} more");
+                }
+
+                // Ask user what to do
+                ed.WriteMessage("\n\nSync Options:");
+                ed.WriteMessage("\n1. Add new equipment from drawing to database");
+                ed.WriteMessage("\n2. Show missing equipment (information only)");
+                ed.WriteMessage("\n3. Cancel");
+
+                PromptKeywordOptions pko = new PromptKeywordOptions("\nChoose action");
+                pko.Keywords.Add("Add");
+                pko.Keywords.Add("Info");
+                pko.Keywords.Add("Cancel");
+                pko.Keywords.Default = "Add";
+
+                PromptResult pr = ed.GetKeywords(pko);
+
+                if (pr.Status != PromptStatus.OK || pr.StringResult == "Cancel")
+                {
+                    ed.WriteMessage("\nSync cancelled.");
+                    return;
+                }
+
+                if (pr.StringResult == "Add" && newInDrawing.Any())
+                {
+                    ed.WriteMessage($"\n\nAdding {newInDrawing.Count} new equipment to database...");
+                    int added = 0;
+
+                    foreach (var tag in newInDrawing)
+                    {
+                        var extracted = drawingTags[tag];
+
+                        var equipment = new Core.Entities.Equipment
+                        {
+                            EquipmentId = Guid.NewGuid(),
+                            ProjectId = selectedProject.ProjectId,
+                            TagNumber = tag,
+                            EquipmentType = GetEquipmentTypeFromBlockName(extracted.BlockName),
+                            Description = $"Synced from drawing - Block: {extracted.BlockName}",
+                            Area = extracted.Layer,
+                            SourceBlockName = extracted.BlockName,
+                            Status = Core.Enums.EquipmentStatus.Planned,
+                            CreatedDate = DateTime.UtcNow,
+                            IsActive = true
+                        };
+
+                        // Add attributes if available
+                        if (extracted.Attributes.ContainsKey("DESCRIPTION"))
+                            equipment.Description = extracted.Attributes["DESCRIPTION"];
+                        if (extracted.Attributes.ContainsKey("SERVICE"))
+                            equipment.Service = extracted.Attributes["SERVICE"];
+                        if (extracted.Attributes.ContainsKey("MANUFACTURER"))
+                            equipment.Manufacturer = extracted.Attributes["MANUFACTURER"];
+                        if (extracted.Attributes.ContainsKey("MODEL"))
+                            equipment.Model = extracted.Attributes["MODEL"];
+
+                        await unitOfWork.Equipment.AddAsync(equipment);
+                        added++;
+                    }
+
+                    await unitOfWork.SaveChangesAsync();
+                    ed.WriteMessage($"\nSuccessfully added {added} equipment to database.");
+                }
+                else if (pr.StringResult == "Info")
+                {
+                    ed.WriteMessage("\n\nSync information displayed above. No changes made.");
+                }
+
+                ed.WriteMessage("\n\nSync analysis complete!");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\nError during sync: {ex.Message}");
+            }
         }
     }
 }
