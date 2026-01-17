@@ -117,6 +117,54 @@
                             <DataGridTextColumn Header="Area" Binding="{Binding Area}" Width="100"/>
                             <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
                             <DataGridTextColumn Header="Manufacturer" Binding="{Binding Manufacturer}" Width="150"/>
+                            <DataGridTextColumn Header="Operating Pressure" Width="130">
+                                <DataGridTextColumn.Binding>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="OperatingPressure"/>
+                                        <Binding Path="OperatingPressureUnit"/>
+                                    </MultiBinding>
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Operating Temp" Width="130">
+                                <DataGridTextColumn.Binding>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="OperatingTemperature"/>
+                                        <Binding Path="OperatingTemperatureUnit"/>
+                                    </MultiBinding>
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Flow Rate" Width="120">
+                                <DataGridTextColumn.Binding>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="FlowRate"/>
+                                        <Binding Path="FlowRateUnit"/>
+                                    </MultiBinding>
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Design Pressure" Width="130">
+                                <DataGridTextColumn.Binding>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="DesignPressure"/>
+                                        <Binding Path="DesignPressureUnit"/>
+                                    </MultiBinding>
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Design Temp" Width="120">
+                                <DataGridTextColumn.Binding>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="DesignTemperature"/>
+                                        <Binding Path="DesignTemperatureUnit"/>
+                                    </MultiBinding>
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Power/Capacity" Width="130">
+                                <DataGridTextColumn.Binding>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="PowerOrCapacity"/>
+                                        <Binding Path="PowerOrCapacityUnit"/>
+                                    </MultiBinding>
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
