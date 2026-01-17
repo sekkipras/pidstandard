@@ -29,7 +29,6 @@ namespace PIDStandardization.UI
             _unitOfWork = unitOfWork;
             _serviceProvider = serviceProvider;
             Loaded += MainWindow_Loaded;
-            LoadProjects();
         }
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -90,11 +89,6 @@ namespace PIDStandardization.UI
 
                 DrawingsProjectComboBox.ItemsSource = projects;
                 DrawingsProjectComboBox.SelectedIndex = 0;
-
-                // Load data for Projects tab
-                var allProjects = await _unitOfWork.Projects.GetAllAsync();
-                ProjectsDataGrid.ItemsSource = allProjects;
-                ProjectsDataGrid.SelectedItem = _selectedProject;
             }
             catch (Exception ex)
             {
@@ -107,43 +101,28 @@ namespace PIDStandardization.UI
             }
         }
 
-        private async void LoadProjects()
-        {
-            try
-            {
-                var projects = await _unitOfWork.Projects.GetAllAsync();
-                ProjectsDataGrid.ItemsSource = projects;
-                StatusTextBlock.Text = $"Loaded {projects.Count()} project(s)";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading projects: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-                StatusTextBlock.Text = "Error loading projects";
-            }
-        }
-
-        private void ProjectsDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (ProjectsDataGrid.SelectedItem is Project project)
-            {
-                _lastSelectedProject = project;
-            }
-        }
-
         private void NewProject_Click(object sender, RoutedEventArgs e)
         {
             var dialog = _serviceProvider.GetRequiredService<NewProjectDialog>();
             if (dialog.ShowDialog() == true)
             {
-                LoadProjects();
                 StatusTextBlock.Text = $"Created project: {dialog.CreatedProject?.ProjectName}";
             }
         }
 
         private void OpenProject_Click(object sender, RoutedEventArgs e)
         {
-            LoadProjects();
+            // Show project selection dialog
+            var projectSelectionDialog = new ProjectSelectionDialog(_unitOfWork);
+            projectSelectionDialog.Owner = this;
+
+            if (projectSelectionDialog.ShowDialog() == true && projectSelectionDialog.SelectedProject != null)
+            {
+                _selectedProject = projectSelectionDialog.SelectedProject;
+                _lastSelectedProject = _selectedProject;
+                Title = $"P&ID Standardization - {_selectedProject.ProjectName}";
+                StatusTextBlock.Text = $"Switched to project: {_selectedProject.ProjectName}";
+            }
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
@@ -351,19 +330,19 @@ namespace PIDStandardization.UI
         {
             if (e.Source is TabControl)
             {
-                if (MainTabControl.SelectedIndex == 1) // Equipment tab
+                if (MainTabControl.SelectedIndex == 0) // Equipment tab
                 {
                     await LoadEquipmentProjectsAsync();
                 }
-                else if (MainTabControl.SelectedIndex == 2) // Lines tab
+                else if (MainTabControl.SelectedIndex == 1) // Lines tab
                 {
                     await LoadLinesProjectsAsync();
                 }
-                else if (MainTabControl.SelectedIndex == 3) // Instruments tab
+                else if (MainTabControl.SelectedIndex == 2) // Instruments tab
                 {
                     await LoadInstrumentsProjectsAsync();
                 }
-                else if (MainTabControl.SelectedIndex == 4) // Drawings tab
+                else if (MainTabControl.SelectedIndex == 3) // Drawings tab
                 {
                     await LoadDrawingsProjectsAsync();
                 }

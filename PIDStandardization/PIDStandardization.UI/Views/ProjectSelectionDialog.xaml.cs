@@ -18,10 +18,15 @@ namespace PIDStandardization.UI.Views
         {
             InitializeComponent();
             _unitOfWork = unitOfWork;
-            LoadProjects();
+            Loaded += ProjectSelectionDialog_Loaded;
         }
 
-        private async void LoadProjects()
+        private async void ProjectSelectionDialog_Loaded(object sender, RoutedEventArgs e)
+        {
+            await LoadProjectsAsync();
+        }
+
+        private async Task LoadProjectsAsync()
         {
             try
             {
@@ -69,14 +74,14 @@ namespace PIDStandardization.UI.Views
             }
         }
 
-        private void NewProject_Click(object sender, RoutedEventArgs e)
+        private async void NewProject_Click(object sender, RoutedEventArgs e)
         {
             var newProjectDialog = new NewProjectDialog(_unitOfWork);
 
             if (newProjectDialog.ShowDialog() == true)
             {
                 // Reload projects list
-                LoadProjects();
+                await LoadProjectsAsync();
 
                 // Auto-select the newly created project
                 if (newProjectDialog.CreatedProject != null)

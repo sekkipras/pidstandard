@@ -48,30 +48,6 @@
 
         <!-- Main Content Area -->
         <TabControl Grid.Row="1" Margin="5" Name="MainTabControl" SelectionChanged="MainTabControl_SelectionChanged">
-            <TabItem Header="Projects">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
-                        <Button Content="New Project" Width="100" Height="30" Margin="5" Click="NewProject_Click"/>
-                        <Button Content="Load Project" Width="100" Height="30" Margin="5" Click="OpenProject_Click"/>
-                    </StackPanel>
-
-                    <DataGrid Grid.Row="1" Margin="5" Name="ProjectsDataGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="ProjectsDataGrid_SelectionChanged">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Project Name" Binding="{Binding ProjectName}" Width="*"/>
-                            <DataGridTextColumn Header="Project Number" Binding="{Binding ProjectNumber}" Width="150"/>
-                            <DataGridTextColumn Header="Client" Binding="{Binding Client}" Width="200"/>
-                            <DataGridTextColumn Header="Tagging Mode" Binding="{Binding TaggingMode}" Width="120"/>
-                            <DataGridTextColumn Header="Created Date" Binding="{Binding CreatedDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="120"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
-            </TabItem>
-
             <TabItem Header="Equipment">
                 <Grid>
                     <Grid.RowDefinitions>
