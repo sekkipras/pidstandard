@@ -339,6 +339,78 @@ namespace PIDStandardization.UI
             }
         }
 
+        private async void ImportEquipment_Click(object sender, RoutedEventArgs e)
+        {
+            if (EquipmentProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                Title = "Import Equipment from Excel"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    StatusTextBlock.Text = "Importing equipment...";
+
+                    // Get existing tag numbers to prevent duplicates
+                    var existingEquipment = await _unitOfWork.Equipment.FindAsync(e => e.ProjectId == selectedProject.ProjectId);
+                    var existingTags = existingEquipment.Select(e => e.TagNumber).ToList();
+
+                    // Import from Excel
+                    var importService = new ExcelImportService();
+                    var result = importService.ImportEquipment(openFileDialog.FileName, selectedProject.ProjectId, existingTags);
+
+                    // Show results dialog
+                    ShowImportResultDialog("Equipment Import", result);
+
+                    // Refresh the grid
+                    await LoadEquipmentForProject(selectedProject.ProjectId);
+
+                    StatusTextBlock.Text = $"Import complete: {result.SuccessCount} added, {result.SkippedCount} skipped, {result.ErrorCount} errors";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error importing equipment: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void DownloadEquipmentTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                FileName = $"Equipment_Import_Template_{DateTime.Now:yyyyMMdd}.xlsx",
+                Title = "Download Equipment Template"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var importService = new ExcelImportService();
+                    importService.GenerateEquipmentTemplate(saveFileDialog.FileName);
+
+                    MessageBox.Show($"Template downloaded successfully!\n\nFile: {saveFileDialog.FileName}\n\nFill in the equipment data and use 'Import from Excel' to load it.",
+                        "Template Downloaded", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error downloading template: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
         private async void RefreshEquipment_Click(object sender, RoutedEventArgs e)
         {
             if (EquipmentProjectComboBox.SelectedItem is Project project)
@@ -580,6 +652,83 @@ namespace PIDStandardization.UI
             }
         }
 
+        private async void ImportLines_Click(object sender, RoutedEventArgs e)
+        {
+            if (LinesProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                Title = "Import Lines from Excel"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    StatusTextBlock.Text = "Importing lines...";
+
+                    // Get existing line numbers
+                    var existingLines = await _unitOfWork.Lines.FindAsync(l => l.ProjectId == selectedProject.ProjectId);
+                    var existingLineNumbers = existingLines.Select(l => l.LineNumber).ToList();
+
+                    // Get equipment mapping for From/To associations
+                    var allEquipment = await _unitOfWork.Equipment.FindAsync(e => e.ProjectId == selectedProject.ProjectId);
+                    var equipmentTagMap = allEquipment.ToDictionary(e => e.TagNumber, e => e.EquipmentId);
+
+                    // Import from Excel
+                    var importService = new ExcelImportService();
+                    var result = importService.ImportLines(openFileDialog.FileName, selectedProject.ProjectId,
+                        existingLineNumbers, equipmentTagMap);
+
+                    // Show results dialog
+                    ShowImportResultDialog("Lines Import", result);
+
+                    // Refresh the grid
+                    await LoadLinesForProject(selectedProject.ProjectId);
+
+                    StatusTextBlock.Text = $"Import complete: {result.SuccessCount} added, {result.SkippedCount} skipped, {result.ErrorCount} errors";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error importing lines: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void DownloadLinesTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                FileName = $"Lines_Import_Template_{DateTime.Now:yyyyMMdd}.xlsx",
+                Title = "Download Lines Template"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var importService = new ExcelImportService();
+                    importService.GenerateLinesTemplate(saveFileDialog.FileName);
+
+                    MessageBox.Show($"Template downloaded successfully!\n\nFile: {saveFileDialog.FileName}\n\nFill in the lines data and use 'Import from Excel' to load it.",
+                        "Template Downloaded", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error downloading template: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
         private async void RefreshLines_Click(object sender, RoutedEventArgs e)
         {
             if (LinesProjectComboBox.SelectedItem is Project project)
@@ -761,6 +910,86 @@ namespace PIDStandardization.UI
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Error exporting instruments: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private async void ImportInstruments_Click(object sender, RoutedEventArgs e)
+        {
+            if (InstrumentsProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                Title = "Import Instruments from Excel"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    StatusTextBlock.Text = "Importing instruments...";
+
+                    // Get existing instrument tags
+                    var existingInstruments = await _unitOfWork.Instruments.FindAsync(i => i.ProjectId == selectedProject.ProjectId);
+                    var existingInstrumentTags = existingInstruments.Select(i => i.TagNumber).ToList();
+
+                    // Get equipment and line mappings
+                    var allEquipment = await _unitOfWork.Equipment.FindAsync(e => e.ProjectId == selectedProject.ProjectId);
+                    var equipmentTagMap = allEquipment.ToDictionary(e => e.TagNumber, e => e.EquipmentId);
+
+                    var allLines = await _unitOfWork.Lines.FindAsync(l => l.ProjectId == selectedProject.ProjectId);
+                    var lineNumberMap = allLines.ToDictionary(l => l.LineNumber, l => l.LineId);
+
+                    // Import from Excel
+                    var importService = new ExcelImportService();
+                    var result = importService.ImportInstruments(openFileDialog.FileName, selectedProject.ProjectId,
+                        existingInstrumentTags, equipmentTagMap, lineNumberMap);
+
+                    // Show results dialog
+                    ShowImportResultDialog("Instruments Import", result);
+
+                    // Refresh the grid
+                    await LoadInstrumentsForProject(selectedProject.ProjectId);
+
+                    StatusTextBlock.Text = $"Import complete: {result.SuccessCount} added, {result.SkippedCount} skipped, {result.ErrorCount} errors";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error importing instruments: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void DownloadInstrumentsTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                FileName = $"Instruments_Import_Template_{DateTime.Now:yyyyMMdd}.xlsx",
+                Title = "Download Instruments Template"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var importService = new ExcelImportService();
+                    importService.GenerateInstrumentsTemplate(saveFileDialog.FileName);
+
+                    MessageBox.Show($"Template downloaded successfully!\n\nFile: {saveFileDialog.FileName}\n\nFill in the instruments data and use 'Import from Excel' to load it.",
+                        "Template Downloaded", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error downloading template: {ex.Message}", "Error",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -1061,6 +1290,45 @@ namespace PIDStandardization.UI
             {
                 await LoadDrawingsForProject(project.ProjectId);
             }
+        }
+
+        // Import result dialog helper
+        private void ShowImportResultDialog(string title, ExcelImportService.ImportResult result)
+        {
+            var message = $"Import Summary:\n\n" +
+                         $"✓ Successfully imported: {result.SuccessCount}\n" +
+                         $"⊘ Skipped (duplicates): {result.SkippedCount}\n" +
+                         $"✗ Errors: {result.ErrorCount}\n";
+
+            if (result.Warnings.Any())
+            {
+                message += $"\n⚠ Warnings: {result.Warnings.Count}\n";
+                message += string.Join("\n", result.Warnings.Take(5));
+                if (result.Warnings.Count > 5)
+                    message += $"\n... and {result.Warnings.Count - 5} more warnings";
+            }
+
+            if (result.Errors.Any())
+            {
+                message += $"\n\nErrors:\n";
+                message += string.Join("\n", result.Errors.Take(5));
+                if (result.Errors.Count > 5)
+                    message += $"\n... and {result.Errors.Count - 5} more errors";
+            }
+
+            if (result.SkippedItems.Any())
+            {
+                message += $"\n\nSkipped Items:\n";
+                message += string.Join("\n", result.SkippedItems.Take(5));
+                if (result.SkippedItems.Count > 5)
+                    message += $"\n... and {result.SkippedItems.Count - 5} more";
+            }
+
+            var icon = result.ErrorCount > 0 ? MessageBoxImage.Warning :
+                       result.SuccessCount > 0 ? MessageBoxImage.Information :
+                       MessageBoxImage.Exclamation;
+
+            MessageBox.Show(message, title, MessageBoxButton.OK, icon);
         }
     }
 }

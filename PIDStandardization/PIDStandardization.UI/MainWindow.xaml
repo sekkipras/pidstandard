@@ -79,7 +79,9 @@
                         <Button Content="Add Equipment" Width="120" Height="30" Margin="5" Click="AddEquipment_Click"/>
                         <Button Content="Edit Equipment" Width="120" Height="30" Margin="5" Click="EditEquipment_Click"/>
                         <Button Content="Delete Equipment" Width="130" Height="30" Margin="5" Click="DeleteEquipment_Click"/>
+                        <Button Content="Import from Excel" Width="130" Height="30" Margin="5" Click="ImportEquipment_Click" Background="LightGreen"/>
                         <Button Content="Export to Excel" Width="120" Height="30" Margin="5" Click="ExportEquipment_Click"/>
+                        <Button Content="Download Template" Width="130" Height="30" Margin="5" Click="DownloadEquipmentTemplate_Click" Background="LightYellow"/>
                         <Button Content="Refresh" Width="80" Height="30" Margin="5" Click="RefreshEquipment_Click"/>
                     </StackPanel>
 
@@ -177,7 +179,9 @@
                         <Button Content="Add Line" Width="100" Height="30" Margin="5" Click="AddLine_Click"/>
                         <Button Content="Edit Line" Width="100" Height="30" Margin="5" Click="EditLine_Click"/>
                         <Button Content="Delete Line" Width="100" Height="30" Margin="5" Click="DeleteLine_Click"/>
+                        <Button Content="Import from Excel" Width="130" Height="30" Margin="5" Click="ImportLines_Click" Background="LightGreen"/>
                         <Button Content="Export to Excel" Width="120" Height="30" Margin="5" Click="ExportLines_Click"/>
+                        <Button Content="Download Template" Width="130" Height="30" Margin="5" Click="DownloadLinesTemplate_Click" Background="LightYellow"/>
                         <Button Content="Refresh" Width="80" Height="30" Margin="5" Click="RefreshLines_Click"/>
                     </StackPanel>
 
@@ -244,7 +248,9 @@
                         <Button Content="Add Instrument" Width="120" Height="30" Margin="5" Click="AddInstrument_Click"/>
                         <Button Content="Edit Instrument" Width="120" Height="30" Margin="5" Click="EditInstrument_Click"/>
                         <Button Content="Delete Instrument" Width="130" Height="30" Margin="5" Click="DeleteInstrument_Click"/>
+                        <Button Content="Import from Excel" Width="130" Height="30" Margin="5" Click="ImportInstruments_Click" Background="LightGreen"/>
                         <Button Content="Export to Excel" Width="120" Height="30" Margin="5" Click="ExportInstruments_Click"/>
+                        <Button Content="Download Template" Width="130" Height="30" Margin="5" Click="DownloadInstrumentsTemplate_Click" Background="LightYellow"/>
                         <Button Content="Refresh" Width="80" Height="30" Margin="5" Click="RefreshInstruments_Click"/>
                     </StackPanel>
 
