@@ -1485,6 +1485,23 @@ namespace PIDStandardization.UI
             }
         }
 
+        private void HierarchicalView_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedProject == null)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            using var scope = _serviceProvider.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+            var dialog = new Views.HierarchicalViewDialog(unitOfWork, _selectedProject);
+            dialog.Owner = this;
+            dialog.ShowDialog();
+        }
+
         #endregion
 
         #region Audit Log Methods

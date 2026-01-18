@@ -30,6 +30,7 @@
                 <MenuItem Header="_Tag Equipment"/>
                 <Separator/>
                 <MenuItem Header="_Tag Renumbering Wizard" Click="TagRenumberingWizard_Click"/>
+                <MenuItem Header="_Hierarchical View" Click="HierarchicalView_Click"/>
             </MenuItem>
             <MenuItem Header="_Drawings">
                 <MenuItem Header="_Import Drawing"/>

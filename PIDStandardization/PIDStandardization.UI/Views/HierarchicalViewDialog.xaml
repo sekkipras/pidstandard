@@ -1,0 +1,229 @@
+<Window x:Class="PIDStandardization.UI.Views.HierarchicalViewDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Equipment Hierarchy Viewer" Height="750" Width="1200"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#673AB7" Padding="15">
+            <StackPanel>
+                <TextBlock Text="Equipment Hierarchy Viewer" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Browse equipment relationships, connections, and process flow hierarchy"
+                           FontSize="12" Foreground="WhiteSmoke" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="350"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Tree View -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- View Options -->
+                <GroupBox Grid.Row="0" Header="View Options" Margin="5" Padding="10">
+                    <StackPanel>
+                        <RadioButton Name="ByAreaRadio" Content="Group by Area" IsChecked="True" Margin="0,5" Checked="ViewOption_Changed"/>
+                        <RadioButton Name="ByTypeRadio" Content="Group by Equipment Type" Margin="0,5" Checked="ViewOption_Changed"/>
+                        <RadioButton Name="ByConnectionRadio" Content="Process Flow (Connections)" Margin="0,5" Checked="ViewOption_Changed"/>
+                        <RadioButton Name="ByDrawingRadio" Content="Group by Drawing" Margin="0,5" Checked="ViewOption_Changed"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- Search Box -->
+                <GroupBox Grid.Row="1" Header="Search" Margin="5" Padding="10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Name="SearchTextBox" Height="25" TextChanged="SearchTextBox_Changed"
+                                 ToolTip="Search for equipment by tag number, type, or description"/>
+                        <Button Grid.Column="1" Content="Clear" Width="60" Height="25" Margin="5,0,0,0" Click="ClearSearch_Click"/>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Hierarchy Tree -->
+                <GroupBox Grid.Row="2" Header="Hierarchy" Margin="5" Padding="5">
+                    <TreeView Name="HierarchyTreeView" SelectedItemChanged="HierarchyTreeView_SelectedItemChanged">
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Icon}" FontFamily="Segoe UI Symbol" Margin="0,0,5,0"/>
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="{Binding FontWeight}"/>
+                                    <TextBlock Text="{Binding Count}" Foreground="Gray" Margin="5,0,0,0"/>
+                                </StackPanel>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                </GroupBox>
+            </Grid>
+
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="LightGray"/>
+
+            <!-- Details Panel -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="200"/>
+                </Grid.RowDefinitions>
+
+                <!-- Equipment Details -->
+                <GroupBox Grid.Row="0" Header="Equipment Details" Margin="5" Padding="10">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Tag Number:" FontWeight="Bold" Margin="0,5"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Name="DetailTagNumberText" Text="-" Margin="0,5"/>
+
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="Equipment Type:" FontWeight="Bold" Margin="10,5,0,5"/>
+                        <TextBlock Grid.Row="0" Grid.Column="3" Name="DetailEquipmentTypeText" Text="-" Margin="0,5"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" FontWeight="Bold" Margin="0,5"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Name="DetailDescriptionText" Text="-" Margin="0,5" TextWrapping="Wrap"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Service:" FontWeight="Bold" Margin="0,5"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Name="DetailServiceText" Text="-" Margin="0,5"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="2" Text="Area:" FontWeight="Bold" Margin="10,5,0,5"/>
+                        <TextBlock Grid.Row="2" Grid.Column="3" Name="DetailAreaText" Text="-" Margin="0,5"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Status:" FontWeight="Bold" Margin="0,5"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Name="DetailStatusText" Text="-" Margin="0,5"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="2" Text="Manufacturer:" FontWeight="Bold" Margin="10,5,0,5"/>
+                        <TextBlock Grid.Row="3" Grid.Column="3" Name="DetailManufacturerText" Text="-" Margin="0,5"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Model:" FontWeight="Bold" Margin="0,5"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1" Name="DetailModelText" Text="-" Margin="0,5"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="2" Text="Drawing:" FontWeight="Bold" Margin="10,5,0,5"/>
+                        <TextBlock Grid.Row="4" Grid.Column="3" Name="DetailDrawingText" Text="-" Margin="0,5"/>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Related Equipment -->
+                <GroupBox Grid.Row="1" Header="Related Equipment" Margin="5" Padding="5">
+                    <TabControl>
+                        <TabItem Header="Connected Lines">
+                            <DataGrid Name="ConnectedLinesDataGrid" AutoGenerateColumns="False" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Line Number" Binding="{Binding LineNumber}" Width="150"/>
+                                    <DataGridTextColumn Header="Service" Binding="{Binding Service}" Width="*"/>
+                                    <DataGridTextColumn Header="Size" Binding="{Binding NominalSize}" Width="80"/>
+                                    <DataGridTextColumn Header="Direction" Binding="{Binding Direction}" Width="100"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+
+                        <TabItem Header="Connected Equipment">
+                            <DataGrid Name="ConnectedEquipmentDataGrid" AutoGenerateColumns="False" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Tag Number" Binding="{Binding TagNumber}" Width="150"/>
+                                    <DataGridTextColumn Header="Equipment Type" Binding="{Binding EquipmentType}" Width="150"/>
+                                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                                    <DataGridTextColumn Header="Relationship" Binding="{Binding Relationship}" Width="120"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+
+                        <TabItem Header="Instruments">
+                            <DataGrid Name="InstrumentsDataGrid" AutoGenerateColumns="False" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Tag Number" Binding="{Binding TagNumber}" Width="150"/>
+                                    <DataGridTextColumn Header="Type" Binding="{Binding InstrumentType}" Width="120"/>
+                                    <DataGridTextColumn Header="Measurement" Binding="{Binding MeasurementType}" Width="120"/>
+                                    <DataGridTextColumn Header="Range" Width="*">
+                                        <DataGridTextColumn.Binding>
+                                            <MultiBinding StringFormat="{}{0} - {1} {2}">
+                                                <Binding Path="RangeMin"/>
+                                                <Binding Path="RangeMax"/>
+                                                <Binding Path="Units"/>
+                                            </MultiBinding>
+                                        </DataGridTextColumn.Binding>
+                                    </DataGridTextColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                    </TabControl>
+                </GroupBox>
+
+                <!-- Process Parameters -->
+                <GroupBox Grid.Row="2" Header="Process Parameters" Margin="5" Padding="10">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Operating Pressure:" FontWeight="SemiBold" Margin="0,2"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Name="DetailOpPressureText" Text="-" Margin="0,2"/>
+
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="Design Pressure:" FontWeight="SemiBold" Margin="10,2,0,2"/>
+                            <TextBlock Grid.Row="0" Grid.Column="3" Name="DetailDesPressureText" Text="-" Margin="0,2"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Operating Temp:" FontWeight="SemiBold" Margin="0,2"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Name="DetailOpTempText" Text="-" Margin="0,2"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="2" Text="Design Temp:" FontWeight="SemiBold" Margin="10,2,0,2"/>
+                            <TextBlock Grid.Row="1" Grid.Column="3" Name="DetailDesTempText" Text="-" Margin="0,2"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Flow Rate:" FontWeight="SemiBold" Margin="0,2"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Name="DetailFlowRateText" Text="-" Margin="0,2"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="2" Text="Power/Capacity:" FontWeight="SemiBold" Margin="10,2,0,2"/>
+                            <TextBlock Grid.Row="2" Grid.Column="3" Name="DetailPowerText" Text="-" Margin="0,2"/>
+                        </Grid>
+                    </ScrollViewer>
+                </GroupBox>
+            </Grid>
+        </Grid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="#F5F5F5" Padding="10">
+            <Grid>
+                <TextBlock Name="StatusTextBlock" Text="Ready" VerticalAlignment="Center"/>
+                <Button Content="Close" Width="100" Height="30" HorizontalAlignment="Right" Click="Close_Click"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
