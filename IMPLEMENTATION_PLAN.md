@@ -1,12 +1,14 @@
 # P&ID Standardization - Production Readiness Implementation Plan
 
+> **Note**: This document describes the original implementation plan. Block learning features (Phase 5 and BlockMapping entity) have been removed from the current version and will be added in a future release after initial user testing.
+
 ## Overview
 Transform the application from development/testing to production-ready for team deployment with:
-1. Database enhancements for drawings and block learning
+1. Database enhancements for drawings ~~and block learning~~
 2. Standalone application deployment
 3. Welcome screen and user guidance
 4. Drawing file management
-5. Block-to-equipment type learning
+5. ~~Block-to-equipment type learning~~ (Deferred to future release)
 6. Excel import/export for valve/instrument lists
 
 ---

@@ -22,51 +22,6 @@ namespace PIDStandardization.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("PIDStandardization.Core.Entities.BlockMapping", b =>
-                {
-                    b.Property<Guid>("BlockMappingId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("BlockName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<double>("ConfidenceScore")
-                        .HasColumnType("float");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("EquipmentType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime>("FirstUsedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsUserConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("LastUsedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("UsageCount")
-                        .HasColumnType("int");
-
-                    b.HasKey("BlockMappingId");
-
-                    b.HasIndex("BlockName")
-                        .IsUnique();
-
-                    b.HasIndex("EquipmentType");
-
-                    b.ToTable("BlockMappings");
-                });
-
             modelBuilder.Entity("PIDStandardization.Core.Entities.Drawing", b =>
                 {
                     b.Property<Guid>("DrawingId")

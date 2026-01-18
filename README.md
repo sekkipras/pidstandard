@@ -6,7 +6,6 @@ A comprehensive Windows desktop application for managing P&ID equipment tagging 
 
 - **Dual Tagging Modes**: Support for Custom and KKS (DIN 40719) tagging standards
 - **AutoCAD Integration**: Extract equipment directly from P&ID drawings (AutoCAD 2026)
-- **Smart Block Learning**: System learns equipment types from AutoCAD block names
 - **Drawing Management**: Version control and centralized storage for P&ID drawings
 - **Database Management**: SQL Server backend for equipment tracking
 - **Excel Import/Export**: Seamless data exchange (coming soon)
@@ -112,14 +111,13 @@ PIDStandardization/
 
 ## AutoCAD Plugin Commands
 
-- `PIDEXTRACTDB` - Extract all equipment from drawing and save to database (with block learning)
+- `PIDEXTRACTDB` - Extract all equipment from drawing and save to database
 - `PIDTAG` - Tag individual equipment blocks with auto-generation, existing equipment linking, or custom tags
 - `PIDSYNC` - Bi-directional synchronization between drawing and database with smart conflict resolution
 - `PIDEXTRACT` - View equipment in drawing (preview mode, no database save)
 - `PIDINFO` - Show plugin information and command list
 
 **Key Features**:
-- **Block Learning System**: Automatically learns equipment types from block names, improving accuracy over time
 - **Smart Tag Generation**: Auto-generates sequential tag numbers based on existing equipment
 - **Bi-directional Sync**: Keep drawing and database in perfect sync with PIDSYNC command
 - **Extended Data Tracking**: Uses AutoCAD XDATA to track tagged blocks
@@ -171,7 +169,6 @@ For issues or questions:
 - Lazy loading enabled for navigation properties
 - **PIDTAG command**: Tag individual equipment blocks with auto-generation and database linking
 - **PIDSYNC command**: Bi-directional synchronization between drawing and database
-- **Block Learning System**: Intelligent equipment type detection that improves over time
 - Multi-AutoCAD version support documentation
 - Fixed critical code quality issues
 - Comprehensive configuration guide added
@@ -185,5 +182,4 @@ For issues or questions:
 - Project and equipment management
 - AutoCAD integration
 - Drawing version control
-- Block learning system
 - Welcome screen with quick start guide

@@ -337,8 +337,7 @@ Always:
 ## Future Enhancements Roadmap
 
 1. **Excel Import/Export** (Priority 1)
-2. **Block Learning UI** (Priority 2)
-3. **Advanced Validation Rules** (Priority 3)
-4. **Reports Generation** (Priority 3)
-5. **Multi-user Support** (Future)
-6. **Cloud Backup** (Future)
+2. **Advanced Validation Rules** (Priority 2)
+3. **Reports Generation** (Priority 2)
+4. **Multi-user Support** (Future)
+5. **Cloud Backup** (Future)

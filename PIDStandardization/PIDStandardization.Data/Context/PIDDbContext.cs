@@ -19,7 +19,6 @@ namespace PIDStandardization.Data.Context
         public DbSet<Line> Lines { get; set; }
         public DbSet<Instrument> Instruments { get; set; }
         public DbSet<ValidationRule> ValidationRules { get; set; }
-        public DbSet<BlockMapping> BlockMappings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,7 +31,6 @@ namespace PIDStandardization.Data.Context
             ConfigureLine(modelBuilder);
             ConfigureInstrument(modelBuilder);
             ConfigureValidationRule(modelBuilder);
-            ConfigureBlockMapping(modelBuilder);
         }
 
         private void ConfigureProject(ModelBuilder modelBuilder)
@@ -206,23 +204,6 @@ namespace PIDStandardization.Data.Context
                 entity.Property(e => e.RuleName).IsRequired().HasMaxLength(200);
 
                 entity.HasIndex(e => e.RuleCode).IsUnique();
-            });
-        }
-
-        private void ConfigureBlockMapping(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<BlockMapping>(entity =>
-            {
-                entity.HasKey(e => e.BlockMappingId);
-                entity.Property(e => e.BlockName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.EquipmentType).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.CreatedBy).HasMaxLength(100);
-
-                // Unique index on BlockName for fast lookup
-                entity.HasIndex(e => e.BlockName).IsUnique();
-
-                // Index on EquipmentType for reporting
-                entity.HasIndex(e => e.EquipmentType);
             });
         }
     }

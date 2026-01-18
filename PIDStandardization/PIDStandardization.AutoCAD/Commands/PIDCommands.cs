@@ -322,11 +322,6 @@ namespace PIDStandardization.AutoCAD.Commands
                 var equipmentList = extractionService.ExtractEquipmentFromDrawing(doc.Database);
 
                 ed.WriteMessage($"\nFound {equipmentList.Count} equipment items");
-
-                // Initialize block learning service
-                var blockLearner = new BlockLearningService();
-                ed.WriteMessage("\nUsing block learning for equipment type detection...");
-
                 ed.WriteMessage("\nSaving to database...");
 
                 int savedCount = 0;
@@ -363,23 +358,8 @@ namespace PIDStandardization.AutoCAD.Commands
                         continue;
                     }
 
-                    // Get equipment type using block learning if available
-                    var suggestion = blockLearner.GetSuggestion(extracted.BlockName);
-                    string equipmentType;
-
-                    if (suggestion.Confidence > 0.5)
-                    {
-                        // Use learned suggestion
-                        equipmentType = suggestion.SuggestedEquipmentType;
-                    }
-                    else
-                    {
-                        // Fall back to pattern matching
-                        equipmentType = extracted.GetEquipmentType();
-
-                        // Learn this mapping for future use
-                        blockLearner.LearnMapping(extracted.BlockName, equipmentType, userConfirmed: false);
-                    }
+                    // Get equipment type using pattern matching
+                    string equipmentType = extracted.GetEquipmentType();
 
                     // Create new equipment
                     var equipment = new Core.Entities.Equipment
@@ -400,8 +380,6 @@ namespace PIDStandardization.AutoCAD.Commands
                     await unitOfWork.Equipment.AddAsync(equipment);
                     savedCount++;
                 }
-
-                // Note: Block learning mappings are saved automatically in LearnMapping() method
 
                 await unitOfWork.SaveChangesAsync();
 
