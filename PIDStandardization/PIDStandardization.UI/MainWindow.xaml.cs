@@ -82,6 +82,9 @@ namespace PIDStandardization.UI
                 // Load project into all tab ComboBoxes
                 var projects = new[] { _selectedProject };
 
+                DashboardProjectComboBox.ItemsSource = projects;
+                DashboardProjectComboBox.SelectedIndex = 0;
+
                 EquipmentProjectComboBox.ItemsSource = projects;
                 EquipmentProjectComboBox.SelectedIndex = 0;
 
@@ -1330,5 +1333,119 @@ namespace PIDStandardization.UI
 
             MessageBox.Show(message, title, MessageBoxButton.OK, icon);
         }
+
+        #region Dashboard Methods
+
+        private async void DashboardProjectComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DashboardProjectComboBox.SelectedItem is Core.Entities.Project selectedProject)
+            {
+                DashboardProjectTaggingModeTextBlock.Text = $"Tagging Mode: {selectedProject.TaggingMode}";
+                await LoadDashboardData(selectedProject);
+            }
+        }
+
+        private async void RefreshDashboard_Click(object sender, RoutedEventArgs e)
+        {
+            if (DashboardProjectComboBox.SelectedItem is Core.Entities.Project selectedProject)
+            {
+                await LoadDashboardData(selectedProject);
+                MessageBox.Show("Dashboard refreshed successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private async Task LoadDashboardData(Core.Entities.Project project)
+        {
+            try
+            {
+                // Get all data for the project
+                var equipment = (await _unitOfWork.Equipment.FindAsync(e => e.ProjectId == project.ProjectId && e.IsActive)).ToList();
+                var lines = (await _unitOfWork.Lines.FindAsync(l => l.ProjectId == project.ProjectId && l.IsActive)).ToList();
+                var instruments = (await _unitOfWork.Instruments.FindAsync(i => i.ProjectId == project.ProjectId && i.IsActive)).ToList();
+
+                // Update statistics cards
+                TotalEquipmentTextBlock.Text = equipment.Count.ToString();
+                TotalEquipmentSubtitleTextBlock.Text = equipment.Count == 1 ? "item in project" : "items in project";
+
+                // Calculate tagged equipment (equipment with non-empty tag numbers)
+                int taggedCount = equipment.Count(e => !string.IsNullOrWhiteSpace(e.TagNumber));
+                TaggedEquipmentTextBlock.Text = taggedCount.ToString();
+                double taggedPercent = equipment.Count > 0 ? (double)taggedCount / equipment.Count * 100 : 0;
+                TaggedEquipmentPercentTextBlock.Text = $"{taggedPercent:F1}% complete";
+
+                TotalLinesTextBlock.Text = lines.Count.ToString();
+                TotalLinesSubtitleTextBlock.Text = lines.Count == 1 ? "process line" : "process lines";
+
+                TotalInstrumentsTextBlock.Text = instruments.Count.ToString();
+                TotalInstrumentsSubtitleTextBlock.Text = instruments.Count == 1 ? "instrument" : "instruments";
+
+                // Equipment by Type breakdown
+                var equipmentByType = equipment
+                    .GroupBy(e => string.IsNullOrEmpty(e.EquipmentType) ? "Unspecified" : e.EquipmentType)
+                    .Select(g => new
+                    {
+                        Type = g.Key,
+                        Count = g.Count(),
+                        Percentage = equipment.Count > 0 ? $"{(double)g.Count() / equipment.Count * 100:F1}%" : "0%"
+                    })
+                    .OrderByDescending(x => x.Count)
+                    .ToList();
+
+                EquipmentByTypeListView.ItemsSource = equipmentByType;
+
+                // Equipment by Status breakdown
+                var equipmentByStatus = equipment
+                    .GroupBy(e => e.Status.ToString())
+                    .Select(g => new
+                    {
+                        Status = g.Key,
+                        Count = g.Count(),
+                        Percentage = equipment.Count > 0 ? $"{(double)g.Count() / equipment.Count * 100:F1}%" : "0%"
+                    })
+                    .OrderByDescending(x => x.Count)
+                    .ToList();
+
+                EquipmentByStatusListView.ItemsSource = equipmentByStatus;
+
+                // Recent equipment (last 10)
+                var recentEquipment = equipment
+                    .OrderByDescending(e => e.CreatedDate)
+                    .Take(10)
+                    .ToList();
+
+                RecentEquipmentListView.ItemsSource = recentEquipment;
+
+                // Project information
+                var projectInfo = $"Project: {project.ProjectName}\n" +
+                                  $"Description: {project.Description}\n" +
+                                  $"Tagging Mode: {project.TaggingMode}\n" +
+                                  $"Created: {project.CreatedDate:yyyy-MM-dd}\n" +
+                                  $"Modified: {project.ModifiedDate:yyyy-MM-dd}";
+
+                DashboardProjectInfoTextBlock.Text = projectInfo;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading dashboard data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ManageDrawings_Click(object sender, RoutedEventArgs e)
+        {
+            // Switch to Drawings tab
+            MainTabControl.SelectedIndex = 4; // Assuming Drawings is the 5th tab (0-indexed)
+        }
+
+        private void RunValidation_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Validation feature will be implemented in a future update.",
+                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        #endregion
     }
 }

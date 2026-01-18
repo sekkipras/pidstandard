@@ -49,6 +49,156 @@
 
         <!-- Main Content Area -->
         <TabControl Grid.Row="1" Margin="5" Name="MainTabControl" SelectionChanged="MainTabControl_SelectionChanged">
+            <!-- Dashboard Tab -->
+            <TabItem Header="Dashboard">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Project Selection -->
+                    <GroupBox Grid.Row="0" Header="Select Project" Margin="5">
+                        <Grid Margin="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox Grid.Column="0" Name="DashboardProjectComboBox"
+                                      DisplayMemberPath="ProjectName"
+                                      SelectionChanged="DashboardProjectComboBox_SelectionChanged"
+                                      Height="25" Margin="0,0,10,0"/>
+                            <TextBlock Grid.Column="1" Name="DashboardProjectTaggingModeTextBlock"
+                                       VerticalAlignment="Center" FontWeight="Bold" Foreground="DarkBlue"
+                                       Margin="10,0,10,0"/>
+                            <Button Grid.Column="2" Content="Refresh Dashboard" Width="130" Height="25"
+                                    Click="RefreshDashboard_Click"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- Dashboard Content -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Statistics Cards -->
+                            <UniformGrid Grid.Row="0" Columns="4" Margin="0,0,0,15">
+                                <!-- Total Equipment Card -->
+                                <Border Background="#4CAF50" CornerRadius="5" Margin="5" Padding="15">
+                                    <StackPanel>
+                                        <TextBlock Text="Total Equipment" FontSize="14" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock Name="TotalEquipmentTextBlock" Text="0" FontSize="32" Foreground="White" FontWeight="Bold" Margin="0,10,0,0"/>
+                                        <TextBlock Name="TotalEquipmentSubtitleTextBlock" Text="items in project" FontSize="11" Foreground="WhiteSmoke"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Tagged Equipment Card -->
+                                <Border Background="#2196F3" CornerRadius="5" Margin="5" Padding="15">
+                                    <StackPanel>
+                                        <TextBlock Text="Tagged Equipment" FontSize="14" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock Name="TaggedEquipmentTextBlock" Text="0" FontSize="32" Foreground="White" FontWeight="Bold" Margin="0,10,0,0"/>
+                                        <TextBlock Name="TaggedEquipmentPercentTextBlock" Text="0% complete" FontSize="11" Foreground="WhiteSmoke"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Lines Card -->
+                                <Border Background="#FF9800" CornerRadius="5" Margin="5" Padding="15">
+                                    <StackPanel>
+                                        <TextBlock Text="Total Lines" FontSize="14" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock Name="TotalLinesTextBlock" Text="0" FontSize="32" Foreground="White" FontWeight="Bold" Margin="0,10,0,0"/>
+                                        <TextBlock Name="TotalLinesSubtitleTextBlock" Text="process lines" FontSize="11" Foreground="WhiteSmoke"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Instruments Card -->
+                                <Border Background="#9C27B0" CornerRadius="5" Margin="5" Padding="15">
+                                    <StackPanel>
+                                        <TextBlock Text="Total Instruments" FontSize="14" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock Name="TotalInstrumentsTextBlock" Text="0" FontSize="32" Foreground="White" FontWeight="Bold" Margin="0,10,0,0"/>
+                                        <TextBlock Name="TotalInstrumentsSubtitleTextBlock" Text="instruments" FontSize="11" Foreground="WhiteSmoke"/>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+
+                            <!-- Charts and Breakdown -->
+                            <Grid Grid.Row="1" Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Equipment by Type -->
+                                <GroupBox Grid.Column="0" Header="Equipment by Type" Margin="5" Padding="10">
+                                    <ListView Name="EquipmentByTypeListView" BorderThickness="0">
+                                        <ListView.View>
+                                            <GridView>
+                                                <GridViewColumn Header="Equipment Type" Width="180" DisplayMemberBinding="{Binding Type}"/>
+                                                <GridViewColumn Header="Count" Width="80" DisplayMemberBinding="{Binding Count}"/>
+                                                <GridViewColumn Header="Percentage" Width="100" DisplayMemberBinding="{Binding Percentage}"/>
+                                            </GridView>
+                                        </ListView.View>
+                                    </ListView>
+                                </GroupBox>
+
+                                <!-- Equipment by Status -->
+                                <GroupBox Grid.Column="1" Header="Equipment by Status" Margin="5" Padding="10">
+                                    <ListView Name="EquipmentByStatusListView" BorderThickness="0">
+                                        <ListView.View>
+                                            <GridView>
+                                                <GridViewColumn Header="Status" Width="180" DisplayMemberBinding="{Binding Status}"/>
+                                                <GridViewColumn Header="Count" Width="80" DisplayMemberBinding="{Binding Count}"/>
+                                                <GridViewColumn Header="Percentage" Width="100" DisplayMemberBinding="{Binding Percentage}"/>
+                                            </GridView>
+                                        </ListView.View>
+                                    </ListView>
+                                </GroupBox>
+                            </Grid>
+
+                            <!-- Recent Activity and Quick Actions -->
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Recent Equipment -->
+                                <GroupBox Grid.Column="0" Header="Recently Added Equipment (Last 10)" Margin="5" Padding="10">
+                                    <ListView Name="RecentEquipmentListView" BorderThickness="0">
+                                        <ListView.View>
+                                            <GridView>
+                                                <GridViewColumn Header="Tag Number" Width="120" DisplayMemberBinding="{Binding TagNumber}"/>
+                                                <GridViewColumn Header="Type" Width="120" DisplayMemberBinding="{Binding EquipmentType}"/>
+                                                <GridViewColumn Header="Description" Width="200" DisplayMemberBinding="{Binding Description}"/>
+                                                <GridViewColumn Header="Date Added" Width="140" DisplayMemberBinding="{Binding CreatedDate, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}"/>
+                                            </GridView>
+                                        </ListView.View>
+                                    </ListView>
+                                </GroupBox>
+
+                                <!-- Quick Actions -->
+                                <GroupBox Grid.Column="1" Header="Quick Actions" Margin="5" Padding="10">
+                                    <StackPanel>
+                                        <Button Content="Add Equipment" Height="35" Margin="0,5" Click="AddEquipment_Click" Background="LightGreen"/>
+                                        <Button Content="Import from Excel" Height="35" Margin="0,5" Click="ImportEquipment_Click" Background="LightBlue"/>
+                                        <Button Content="Export to Excel" Height="35" Margin="0,5" Click="ExportEquipment_Click" Background="LightYellow"/>
+                                        <Button Content="Manage Drawings" Height="35" Margin="0,5" Click="ManageDrawings_Click" Background="LightCoral"/>
+                                        <Button Content="Run Validation" Height="35" Margin="0,5" Click="RunValidation_Click" Background="LightSalmon"/>
+                                        <Separator Margin="0,10"/>
+                                        <TextBlock Text="Project Information" FontWeight="Bold" Margin="0,5"/>
+                                        <TextBlock Name="DashboardProjectInfoTextBlock" TextWrapping="Wrap" Margin="0,5"/>
+                                    </StackPanel>
+                                </GroupBox>
+                            </Grid>
+                        </Grid>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
             <TabItem Header="Equipment">
                 <Grid>
                     <Grid.RowDefinitions>
