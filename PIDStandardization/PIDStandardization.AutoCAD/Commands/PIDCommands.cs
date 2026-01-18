@@ -396,6 +396,128 @@ namespace PIDStandardization.AutoCAD.Commands
         }
 
         /// <summary>
+        /// Command to visualize tag status in drawing
+        /// Usage: PIDSTATUS
+        /// </summary>
+        [CommandMethod("PIDSTATUS")]
+        public void ShowTagStatus()
+        {
+            Document doc = AcApp.DocumentManager.MdiActiveDocument;
+            if (doc == null) return;
+
+            Editor ed = doc.Editor;
+
+            try
+            {
+                ed.WriteMessage("\n=== P&ID Tag Status Visualization ===");
+
+                using (Transaction tr = doc.Database.TransactionManager.StartTransaction())
+                {
+                    // Get RegAppTable to check if PIDSTD application exists
+                    RegAppTable rat = tr.GetObject(doc.Database.RegAppTableId, OpenMode.ForRead) as RegAppTable;
+                    bool hasPIDSTDApp = rat.Has("PIDSTD");
+
+                    // Get block table
+                    BlockTable bt = tr.GetObject(doc.Database.BlockTableId, OpenMode.ForRead) as BlockTable;
+                    BlockTableRecord modelSpace = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
+
+                    int taggedCount = 0;
+                    int untaggedCount = 0;
+                    int totalBlocks = 0;
+
+                    // Iterate through all block references in model space
+                    foreach (ObjectId objId in modelSpace)
+                    {
+                        Entity ent = tr.GetObject(objId, OpenMode.ForRead) as Entity;
+
+                        if (ent is BlockReference blockRef)
+                        {
+                            // Skip layout blocks and viewports
+                            BlockTableRecord btr = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
+                            if (btr.IsLayout || btr.IsAnonymous)
+                                continue;
+
+                            totalBlocks++;
+
+                            // Check if block has PIDSTD extended data
+                            bool isTagged = false;
+                            if (hasPIDSTDApp)
+                            {
+                                ResultBuffer xdata = blockRef.GetXDataForApplication("PIDSTD");
+                                if (xdata != null)
+                                {
+                                    TypedValue[] values = xdata.AsArray();
+                                    // Check if XDATA contains "TAGGED" marker
+                                    foreach (var tv in values)
+                                    {
+                                        if (tv.TypeCode == (int)DxfCode.ExtendedDataAsciiString &&
+                                            tv.Value.ToString() == "TAGGED")
+                                        {
+                                            isTagged = true;
+                                            break;
+                                        }
+                                    }
+                                    xdata.Dispose();
+                                }
+                            }
+
+                            // Upgrade to write mode to change color
+                            blockRef.UpgradeOpen();
+
+                            if (isTagged)
+                            {
+                                // Set color to green (3)
+                                blockRef.ColorIndex = 3;
+                                taggedCount++;
+                            }
+                            else
+                            {
+                                // Set color to red (1)
+                                blockRef.ColorIndex = 1;
+                                untaggedCount++;
+                            }
+                        }
+                    }
+
+                    tr.Commit();
+
+                    // Display statistics
+                    ed.WriteMessage("\n\n╔═══════════════════════════════════════════════╗");
+                    ed.WriteMessage("\n║        Tag Status Summary                     ║");
+                    ed.WriteMessage("\n╟───────────────────────────────────────────────╢");
+                    ed.WriteMessage($"\n║  Total Blocks:         {totalBlocks,-20}  ║");
+                    ed.WriteMessage($"\n║  Tagged (Green):       {taggedCount,-20}  ║");
+                    ed.WriteMessage($"\n║  Untagged (Red):       {untaggedCount,-20}  ║");
+
+                    if (totalBlocks > 0)
+                    {
+                        double percentTagged = (double)taggedCount / totalBlocks * 100;
+                        ed.WriteMessage($"\n║  Completion:           {percentTagged:F1}%-{new string(' ', 16)}║");
+                    }
+
+                    ed.WriteMessage("\n╟───────────────────────────────────────────────╢");
+                    ed.WriteMessage("\n║  Legend:                                      ║");
+                    ed.WriteMessage("\n║    Green blocks = Tagged in database          ║");
+                    ed.WriteMessage("\n║    Red blocks   = Not yet tagged              ║");
+                    ed.WriteMessage("\n╚═══════════════════════════════════════════════╝");
+
+                    if (untaggedCount > 0)
+                    {
+                        ed.WriteMessage($"\n\nTip: Use PIDTAG command to tag individual blocks.");
+                    }
+                    else if (totalBlocks > 0)
+                    {
+                        ed.WriteMessage("\n\nAll blocks are tagged! Use PIDSYNC to verify database synchronization.");
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\nError: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// Command to show P&ID Standardization info
         /// Usage: PIDINFO
         /// </summary>
@@ -416,6 +538,7 @@ namespace PIDStandardization.AutoCAD.Commands
             ed.WriteMessage("\n║   PIDEXTRACT   - Extract all equipment from drawing       ║");
             ed.WriteMessage("\n║   PIDEXTRACTDB - Extract and save to database             ║");
             ed.WriteMessage("\n║   PIDSYNC      - Sync drawing with database               ║");
+            ed.WriteMessage("\n║   PIDSTATUS    - Visualize tag status in drawing          ║");
             ed.WriteMessage("\n║   PIDINFO      - Show this information                    ║");
             ed.WriteMessage("\n╚═══════════════════════════════════════════════════════════╝");
         }

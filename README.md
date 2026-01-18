@@ -114,12 +114,14 @@ PIDStandardization/
 - `PIDEXTRACTDB` - Extract all equipment from drawing and save to database
 - `PIDTAG` - Tag individual equipment blocks with auto-generation, existing equipment linking, or custom tags
 - `PIDSYNC` - Bi-directional synchronization between drawing and database with smart conflict resolution
+- `PIDSTATUS` - Visual tag status in drawing (highlights tagged blocks in green, untagged in red)
 - `PIDEXTRACT` - View equipment in drawing (preview mode, no database save)
 - `PIDINFO` - Show plugin information and command list
 
 **Key Features**:
 - **Smart Tag Generation**: Auto-generates sequential tag numbers based on existing equipment
 - **Bi-directional Sync**: Keep drawing and database in perfect sync with PIDSYNC command
+- **Visual Tag Status**: Instantly see which blocks are tagged vs untagged with color-coding
 - **Extended Data Tracking**: Uses AutoCAD XDATA to track tagged blocks
 
 ## Database Migrations
