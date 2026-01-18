@@ -1,4 +1,6 @@
 using PIDStandardization.Core.Entities;
+using PIDStandardization.Core.Enums;
+using PIDStandardization.AutoCAD.Services;
 using System.Windows.Forms;
 
 namespace PIDStandardization.AutoCAD.Forms
@@ -17,6 +19,8 @@ namespace PIDStandardization.AutoCAD.Forms
         private Button cancelButton = null!;
         private Label blockInfoLabel = null!;
         private Label equipmentTypeLabel = null!;
+        private Label validationLabel = null!;
+        private Label formatHintLabel = null!;
 
         public string? SelectedTagNumber { get; private set; }
         public bool UseExistingEquipment { get; private set; }
@@ -25,12 +29,16 @@ namespace PIDStandardization.AutoCAD.Forms
         private readonly IEnumerable<Equipment> _availableEquipment;
         private readonly string _blockName;
         private readonly string _suggestedTag;
+        private readonly TaggingMode _taggingMode;
+        private readonly TagValidationService _validationService;
 
-        public TagAssignmentForm(IEnumerable<Equipment> availableEquipment, string blockName, string suggestedTag)
+        public TagAssignmentForm(IEnumerable<Equipment> availableEquipment, string blockName, string suggestedTag, TaggingMode taggingMode = TaggingMode.Custom)
         {
             _availableEquipment = availableEquipment;
             _blockName = blockName;
             _suggestedTag = suggestedTag;
+            _taggingMode = taggingMode;
+            _validationService = new TagValidationService();
 
             InitializeComponent();
             LoadEquipmentList();
@@ -38,8 +46,8 @@ namespace PIDStandardization.AutoCAD.Forms
 
         private void InitializeComponent()
         {
-            this.Text = "Assign Tag Number";
-            this.Size = new System.Drawing.Size(500, 400);
+            this.Text = $"Assign Tag Number ({_taggingMode} Mode)";
+            this.Size = new System.Drawing.Size(500, 500);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MaximizeBox = false;
@@ -109,13 +117,36 @@ namespace PIDStandardization.AutoCAD.Forms
                 Size = new System.Drawing.Size(420, 25),
                 Enabled = false
             };
+            customTagTextBox.TextChanged += CustomTagTextBox_TextChanged;
             this.Controls.Add(customTagTextBox);
+
+            // Validation feedback label
+            validationLabel = new Label
+            {
+                Location = new System.Drawing.Point(40, 240),
+                Size = new System.Drawing.Size(420, 40),
+                ForeColor = System.Drawing.Color.Red,
+                Text = string.Empty,
+                Font = new System.Drawing.Font("Segoe UI", 8)
+            };
+            this.Controls.Add(validationLabel);
+
+            // Format hint label
+            formatHintLabel = new Label
+            {
+                Location = new System.Drawing.Point(20, 290),
+                Size = new System.Drawing.Size(450, 80),
+                Text = _validationService.GetFormatDescription(_taggingMode),
+                ForeColor = System.Drawing.Color.DarkBlue,
+                Font = new System.Drawing.Font("Segoe UI", 8)
+            };
+            this.Controls.Add(formatHintLabel);
 
             // Info label
             Label infoLabel = new Label
             {
                 Text = "The tag number will be written to the block's TAG attribute\nand saved to the database.",
-                Location = new System.Drawing.Point(20, 260),
+                Location = new System.Drawing.Point(20, 380),
                 Size = new System.Drawing.Size(450, 40),
                 ForeColor = System.Drawing.Color.Gray
             };
@@ -125,7 +156,7 @@ namespace PIDStandardization.AutoCAD.Forms
             okButton = new Button
             {
                 Text = "OK",
-                Location = new System.Drawing.Point(280, 320),
+                Location = new System.Drawing.Point(280, 430),
                 Size = new System.Drawing.Size(90, 30),
                 DialogResult = DialogResult.OK
             };
@@ -136,7 +167,7 @@ namespace PIDStandardization.AutoCAD.Forms
             cancelButton = new Button
             {
                 Text = "Cancel",
-                Location = new System.Drawing.Point(380, 320),
+                Location = new System.Drawing.Point(380, 430),
                 Size = new System.Drawing.Size(90, 30),
                 DialogResult = DialogResult.Cancel
             };
@@ -210,6 +241,66 @@ namespace PIDStandardization.AutoCAD.Forms
             if (customTagRadio.Checked)
             {
                 customTagTextBox.Focus();
+                // Trigger validation if there's already text
+                if (!string.IsNullOrEmpty(customTagTextBox.Text))
+                {
+                    ValidateCustomTag();
+                }
+            }
+            else
+            {
+                // Clear validation message when switching away from custom tag
+                validationLabel.Text = string.Empty;
+            }
+        }
+
+        private void CustomTagTextBox_TextChanged(object? sender, EventArgs e)
+        {
+            if (customTagRadio.Checked)
+            {
+                ValidateCustomTag();
+            }
+        }
+
+        private void ValidateCustomTag()
+        {
+            string tagNumber = customTagTextBox.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(tagNumber))
+            {
+                validationLabel.Text = string.Empty;
+                validationLabel.ForeColor = System.Drawing.Color.Red;
+                return;
+            }
+
+            // Perform format validation
+            var validationResult = _validationService.ValidateTag(tagNumber, _taggingMode);
+
+            if (!validationResult.IsValid)
+            {
+                validationLabel.Text = $"⚠ {validationResult.ErrorMessage}";
+                validationLabel.ForeColor = System.Drawing.Color.Red;
+
+                // Suggest correction
+                string suggested = _validationService.SuggestCorrection(tagNumber, _taggingMode);
+                if (!string.IsNullOrEmpty(suggested) && suggested != tagNumber)
+                {
+                    validationLabel.Text += $"\nSuggested: {suggested}";
+                }
+            }
+            else
+            {
+                // Check for duplicates in real-time
+                if (_availableEquipment.Any(e => e.TagNumber.Equals(tagNumber, StringComparison.OrdinalIgnoreCase)))
+                {
+                    validationLabel.Text = $"⚠ Tag '{tagNumber}' already exists in database.";
+                    validationLabel.ForeColor = System.Drawing.Color.Orange;
+                }
+                else
+                {
+                    validationLabel.Text = "✓ Valid tag number";
+                    validationLabel.ForeColor = System.Drawing.Color.Green;
+                }
             }
         }
 
@@ -249,6 +340,24 @@ namespace PIDStandardization.AutoCAD.Forms
                 }
 
                 SelectedTagNumber = customTagTextBox.Text.Trim();
+
+                // Validate tag format
+                var validationResult = _validationService.ValidateTag(SelectedTagNumber, _taggingMode);
+                if (!validationResult.IsValid)
+                {
+                    string suggestedCorrection = _validationService.SuggestCorrection(SelectedTagNumber, _taggingMode);
+                    string message = $"Invalid tag format:\n\n{validationResult.ErrorMessage}";
+
+                    if (!string.IsNullOrEmpty(suggestedCorrection) && suggestedCorrection != SelectedTagNumber)
+                    {
+                        message += $"\n\nSuggested correction: {suggestedCorrection}";
+                    }
+
+                    MessageBox.Show(message, "Tag Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    this.DialogResult = DialogResult.None;
+                    return;
+                }
+
                 UseExistingEquipment = false;
 
                 // Check for duplicates

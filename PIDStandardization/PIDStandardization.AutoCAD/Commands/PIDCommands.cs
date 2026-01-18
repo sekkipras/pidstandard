@@ -96,8 +96,13 @@ namespace PIDStandardization.AutoCAD.Commands
                             suggestedTag = $"{blockRef.Name}-{(maxNum + 1):D3}";
                         }
 
-                        // Show tag assignment dialog
-                        Forms.TagAssignmentForm tagForm = new Forms.TagAssignmentForm(allEquipment, blockRef.Name, suggestedTag);
+                        // Show tag assignment dialog with project tagging mode
+                        Forms.TagAssignmentForm tagForm = new Forms.TagAssignmentForm(
+                            allEquipment,
+                            blockRef.Name,
+                            suggestedTag,
+                            selectedProject.TaggingMode);
+
                         if (tagForm.ShowDialog() != System.Windows.Forms.DialogResult.OK || string.IsNullOrEmpty(tagForm.SelectedTagNumber))
                         {
                             ed.WriteMessage("\nTag assignment cancelled.");
