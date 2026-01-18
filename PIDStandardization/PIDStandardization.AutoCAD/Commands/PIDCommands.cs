@@ -204,6 +204,227 @@ namespace PIDStandardization.AutoCAD.Commands
             }
         }
 
+        /// <summary>
+        /// Command to batch tag multiple equipment blocks
+        /// Usage: PIDBATCHTAG
+        /// </summary>
+        [CommandMethod("PIDBATCHTAG")]
+        public async void BatchTagEquipment()
+        {
+            Document doc = AcApp.DocumentManager.MdiActiveDocument;
+            if (doc == null) return;
+
+            Editor ed = doc.Editor;
+
+            try
+            {
+                ed.WriteMessage("\n=== P&ID Batch Equipment Tagging ===");
+
+                // Get projects from database
+                var unitOfWork = Services.DatabaseService.GetUnitOfWork();
+                var projects = await unitOfWork.Projects.GetAllAsync();
+
+                if (!projects.Any())
+                {
+                    ed.WriteMessage("\nNo projects found in database. Please create a project first in the WPF application.");
+                    return;
+                }
+
+                // Show project selection dialog
+                Forms.ProjectSelectionForm projectForm = new Forms.ProjectSelectionForm(projects);
+                if (projectForm.ShowDialog() != System.Windows.Forms.DialogResult.OK || projectForm.SelectedProject == null)
+                {
+                    ed.WriteMessage("\nCommand cancelled.");
+                    return;
+                }
+
+                var selectedProject = projectForm.SelectedProject;
+                ed.WriteMessage($"\nSelected project: {selectedProject.ProjectName}");
+
+                // Get all equipment for this project
+                var allEquipment = await unitOfWork.Equipment.FindAsync(e => e.ProjectId == selectedProject.ProjectId && e.IsActive);
+                ed.WriteMessage($"\nFound {allEquipment.Count()} existing equipment in database.");
+
+                // Prompt user to select multiple blocks
+                ed.WriteMessage("\nSelect equipment blocks for batch tagging (press Enter when done)...");
+
+                PromptSelectionOptions pso = new PromptSelectionOptions();
+                pso.MessageForAdding = "\nSelect blocks: ";
+                TypedValue[] filterList = new TypedValue[]
+                {
+                    new TypedValue((int)DxfCode.Start, "INSERT")
+                };
+                SelectionFilter filter = new SelectionFilter(filterList);
+
+                PromptSelectionResult psr = ed.GetSelection(pso, filter);
+
+                if (psr.Status != PromptStatus.OK)
+                {
+                    ed.WriteMessage("\nCommand cancelled.");
+                    return;
+                }
+
+                SelectionSet selectionSet = psr.Value;
+                int totalBlocks = selectionSet.Count;
+                ed.WriteMessage($"\nSelected {totalBlocks} blocks for batch tagging.");
+
+                // Get tag counters for auto-generation
+                var tagCounters = new Dictionary<string, int>();
+                foreach (var eq in allEquipment)
+                {
+                    var parts = eq.TagNumber.Split('-');
+                    if (parts.Length > 1 && int.TryParse(parts[parts.Length - 1], out int num))
+                    {
+                        string prefix = string.Join("-", parts.Take(parts.Length - 1));
+                        if (!tagCounters.ContainsKey(prefix) || tagCounters[prefix] < num)
+                        {
+                            tagCounters[prefix] = num;
+                        }
+                    }
+                }
+
+                // Process each selected block
+                using (Transaction tr = doc.Database.TransactionManager.StartTransaction())
+                {
+                    // Register application name if not exists
+                    RegAppTable rat = tr.GetObject(doc.Database.RegAppTableId, OpenMode.ForRead) as RegAppTable;
+                    if (!rat.Has("PIDSTD"))
+                    {
+                        rat.UpgradeOpen();
+                        RegAppTableRecord ratr = new RegAppTableRecord();
+                        ratr.Name = "PIDSTD";
+                        rat.Add(ratr);
+                        tr.AddNewlyCreatedDBObject(ratr, true);
+                    }
+
+                    int taggedCount = 0;
+                    int skippedCount = 0;
+                    var newEquipmentList = new List<Core.Entities.Equipment>();
+
+                    foreach (SelectedObject selObj in selectionSet)
+                    {
+                        if (selObj == null) continue;
+
+                        BlockReference blockRef = tr.GetObject(selObj.ObjectId, OpenMode.ForRead) as BlockReference;
+                        if (blockRef == null) continue;
+
+                        // Check if block is already tagged (has PIDSTD XDATA)
+                        bool alreadyTagged = false;
+                        ResultBuffer existingXData = blockRef.GetXDataForApplication("PIDSTD");
+                        if (existingXData != null)
+                        {
+                            TypedValue[] values = existingXData.AsArray();
+                            foreach (var tv in values)
+                            {
+                                if (tv.TypeCode == (int)DxfCode.ExtendedDataAsciiString &&
+                                    tv.Value.ToString() == "TAGGED")
+                                {
+                                    alreadyTagged = true;
+                                    break;
+                                }
+                            }
+                            existingXData.Dispose();
+                        }
+
+                        if (alreadyTagged)
+                        {
+                            skippedCount++;
+                            continue;
+                        }
+
+                        // Generate tag number
+                        string blockName = blockRef.Name;
+                        string tagPrefix = blockName;
+
+                        // Initialize counter for this prefix if not exists
+                        if (!tagCounters.ContainsKey(tagPrefix))
+                        {
+                            tagCounters[tagPrefix] = 0;
+                        }
+
+                        // Increment counter
+                        tagCounters[tagPrefix]++;
+                        string tagNumber = $"{tagPrefix}-{tagCounters[tagPrefix]:D3}";
+
+                        // Upgrade block to write mode
+                        blockRef.UpgradeOpen();
+
+                        // Try to update TAG attribute
+                        bool attributeUpdated = false;
+                        AttributeCollection attCol = blockRef.AttributeCollection;
+
+                        foreach (ObjectId attId in attCol)
+                        {
+                            AttributeReference attRef = tr.GetObject(attId, OpenMode.ForRead) as AttributeReference;
+                            if (attRef != null && (attRef.Tag.ToUpper() == "TAG" || attRef.Tag.ToUpper() == "TAGNUMBER"))
+                            {
+                                attRef.UpgradeOpen();
+                                attRef.TextString = tagNumber;
+                                attributeUpdated = true;
+                                break;
+                            }
+                        }
+
+                        // Add extended data with tag information
+                        ResultBuffer rb = new ResultBuffer(
+                            new TypedValue((int)DxfCode.ExtendedDataRegAppName, "PIDSTD"),
+                            new TypedValue((int)DxfCode.ExtendedDataAsciiString, "TAGGED"),
+                            new TypedValue((int)DxfCode.ExtendedDataAsciiString, DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")),
+                            new TypedValue((int)DxfCode.ExtendedDataAsciiString, tagNumber)
+                        );
+
+                        blockRef.XData = rb;
+
+                        // Create new equipment in database
+                        var equipment = new Core.Entities.Equipment
+                        {
+                            EquipmentId = Guid.NewGuid(),
+                            ProjectId = selectedProject.ProjectId,
+                            TagNumber = tagNumber,
+                            EquipmentType = GetEquipmentTypeFromBlockName(blockRef.Name),
+                            Description = $"Batch tagged from block {blockRef.Name}",
+                            Area = blockRef.Layer,
+                            SourceBlockName = blockRef.Name,
+                            Status = Core.Enums.EquipmentStatus.Planned,
+                            CreatedDate = DateTime.UtcNow,
+                            IsActive = true
+                        };
+
+                        newEquipmentList.Add(equipment);
+                        taggedCount++;
+                    }
+
+                    tr.Commit();
+
+                    // Save all new equipment to database
+                    if (newEquipmentList.Any())
+                    {
+                        foreach (var equipment in newEquipmentList)
+                        {
+                            await unitOfWork.Equipment.AddAsync(equipment);
+                        }
+                        await unitOfWork.SaveChangesAsync();
+                    }
+
+                    ed.WriteMessage("\n\n╔═══════════════════════════════════════════╗");
+                    ed.WriteMessage("\n║     Batch Tagging Summary                 ║");
+                    ed.WriteMessage("\n╟───────────────────────────────────────────╢");
+                    ed.WriteMessage($"\n║  Total Selected:       {totalBlocks,-20}║");
+                    ed.WriteMessage($"\n║  Tagged Successfully:  {taggedCount,-20}║");
+                    ed.WriteMessage($"\n║  Skipped (Already Tagged): {skippedCount,-16}║");
+                    ed.WriteMessage("\n╚═══════════════════════════════════════════╝");
+                    ed.WriteMessage($"\n\nAll {taggedCount} equipment items saved to database successfully!");
+                }
+
+                ed.WriteMessage("\nCommand completed successfully.");
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage($"\nError: {ex.Message}");
+                ed.WriteMessage($"\nStack trace: {ex.StackTrace}");
+            }
+        }
+
         private string GetEquipmentTypeFromBlockName(string blockName)
         {
             string upperBlock = blockName.ToUpper();
@@ -536,10 +757,11 @@ namespace PIDStandardization.AutoCAD.Commands
 
             ed.WriteMessage("\n╔═══════════════════════════════════════════════════════════╗");
             ed.WriteMessage("\n║   P&ID Standardization Application for AutoCAD            ║");
-            ed.WriteMessage("\n║   Version 1.0                                             ║");
+            ed.WriteMessage("\n║   Version 1.1                                             ║");
             ed.WriteMessage("\n╟───────────────────────────────────────────────────────────╢");
             ed.WriteMessage("\n║   Available Commands:                                     ║");
-            ed.WriteMessage("\n║   PIDTAG       - Tag equipment block                      ║");
+            ed.WriteMessage("\n║   PIDTAG       - Tag individual equipment block           ║");
+            ed.WriteMessage("\n║   PIDBATCHTAG  - Tag multiple blocks at once              ║");
             ed.WriteMessage("\n║   PIDEXTRACT   - Extract all equipment from drawing       ║");
             ed.WriteMessage("\n║   PIDEXTRACTDB - Extract and save to database             ║");
             ed.WriteMessage("\n║   PIDSYNC      - Sync drawing with database               ║");
