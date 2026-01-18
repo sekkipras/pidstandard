@@ -24,6 +24,7 @@ namespace PIDStandardization.Data.Repositories
             Lines = new Repository<Line>(_context);
             Instruments = new Repository<Instrument>(_context);
             ValidationRules = new Repository<ValidationRule>(_context);
+            AuditLogs = new Repository<AuditLog>(_context);
         }
 
         public IRepository<Project> Projects { get; private set; }
@@ -32,6 +33,7 @@ namespace PIDStandardization.Data.Repositories
         public IRepository<Line> Lines { get; private set; }
         public IRepository<Instrument> Instruments { get; private set; }
         public IRepository<ValidationRule> ValidationRules { get; private set; }
+        public IRepository<AuditLog> AuditLogs { get; private set; }
 
         public async Task<int> SaveChangesAsync()
         {

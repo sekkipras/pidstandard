@@ -426,21 +426,29 @@ namespace PIDStandardization.UI
         {
             if (e.Source is TabControl)
             {
-                if (MainTabControl.SelectedIndex == 0) // Equipment tab
+                if (MainTabControl.SelectedIndex == 0) // Dashboard tab
+                {
+                    // Dashboard loads on project selection
+                }
+                else if (MainTabControl.SelectedIndex == 1) // Equipment tab
                 {
                     await LoadEquipmentProjectsAsync();
                 }
-                else if (MainTabControl.SelectedIndex == 1) // Lines tab
+                else if (MainTabControl.SelectedIndex == 2) // Lines tab
                 {
                     await LoadLinesProjectsAsync();
                 }
-                else if (MainTabControl.SelectedIndex == 2) // Instruments tab
+                else if (MainTabControl.SelectedIndex == 3) // Instruments tab
                 {
                     await LoadInstrumentsProjectsAsync();
                 }
-                else if (MainTabControl.SelectedIndex == 3) // Drawings tab
+                else if (MainTabControl.SelectedIndex == 4) // Drawings tab
                 {
                     await LoadDrawingsProjectsAsync();
+                }
+                else if (MainTabControl.SelectedIndex == 6) // Audit Log tab (after Validation)
+                {
+                    await LoadAuditLogProjectsAsync();
                 }
             }
         }
@@ -1444,6 +1452,127 @@ namespace PIDStandardization.UI
         {
             MessageBox.Show("Validation feature will be implemented in a future update.",
                 "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        #endregion
+
+        #region Audit Log Methods
+
+        private bool _isLoadingAuditLogProjects = false;
+
+        private async Task LoadAuditLogProjectsAsync()
+        {
+            if (_isLoadingAuditLogProjects)
+                return;
+
+            _isLoadingAuditLogProjects = true;
+            try
+            {
+                var projects = await _unitOfWork.Projects.GetAllAsync();
+                AuditLogProjectComboBox.ItemsSource = projects;
+
+                // Select the last selected project
+                if (_lastSelectedProject != null && projects.Any(p => p.ProjectId == _lastSelectedProject.ProjectId))
+                {
+                    AuditLogProjectComboBox.SelectedItem = projects.First(p => p.ProjectId == _lastSelectedProject.ProjectId);
+                }
+                else if (projects.Any())
+                {
+                    AuditLogProjectComboBox.SelectedIndex = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading projects: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isLoadingAuditLogProjects = false;
+            }
+        }
+
+        private async void AuditLogProjectComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isInitializing) return;
+
+            if (AuditLogProjectComboBox.SelectedItem is Project project)
+            {
+                AuditLogProjectNameTextBlock.Text = $"Project: {project.ProjectName}";
+                await LoadAuditLogsForProject(project.ProjectId);
+            }
+        }
+
+        private async Task LoadAuditLogsForProject(Guid projectId)
+        {
+            try
+            {
+                // Get filter values
+                string? entityTypeFilter = (EntityTypeFilterComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
+                string? actionFilter = (ActionFilterComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
+                string? timeRangeFilter = (TimeRangeFilterComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
+
+                // Calculate date range
+                DateTime startDate = DateTime.MinValue;
+                if (timeRangeFilter == "24 Hours")
+                    startDate = DateTime.UtcNow.AddDays(-1);
+                else if (timeRangeFilter == "7 Days")
+                    startDate = DateTime.UtcNow.AddDays(-7);
+                else if (timeRangeFilter == "30 Days")
+                    startDate = DateTime.UtcNow.AddDays(-30);
+
+                // Get audit logs
+                IEnumerable<AuditLog> auditLogs;
+                if (timeRangeFilter == "All Time")
+                {
+                    auditLogs = await _unitOfWork.AuditLogs.FindAsync(a => a.ProjectId == projectId);
+                }
+                else
+                {
+                    auditLogs = await _unitOfWork.AuditLogs.FindAsync(a =>
+                        a.ProjectId == projectId && a.Timestamp >= startDate);
+                }
+
+                // Apply entity type filter
+                if (entityTypeFilter != "All" && !string.IsNullOrEmpty(entityTypeFilter))
+                {
+                    auditLogs = auditLogs.Where(a => a.EntityType == entityTypeFilter);
+                }
+
+                // Apply action filter
+                if (actionFilter != "All" && !string.IsNullOrEmpty(actionFilter))
+                {
+                    auditLogs = auditLogs.Where(a => a.Action == actionFilter);
+                }
+
+                // Sort by timestamp descending (most recent first)
+                var sortedLogs = auditLogs.OrderByDescending(a => a.Timestamp).ToList();
+
+                AuditLogDataGrid.ItemsSource = sortedLogs;
+                StatusTextBlock.Text = $"Loaded {sortedLogs.Count} audit log entries";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading audit logs: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                StatusTextBlock.Text = "Error loading audit logs";
+            }
+        }
+
+        private async void AuditLogFilter_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isInitializing || AuditLogProjectComboBox.SelectedItem is not Project project)
+                return;
+
+            await LoadAuditLogsForProject(project.ProjectId);
+        }
+
+        private async void RefreshAuditLog_Click(object sender, RoutedEventArgs e)
+        {
+            if (AuditLogProjectComboBox.SelectedItem is Project project)
+            {
+                await LoadAuditLogsForProject(project.ProjectId);
+            }
         }
 
         #endregion

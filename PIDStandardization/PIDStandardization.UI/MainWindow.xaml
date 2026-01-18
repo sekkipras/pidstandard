@@ -483,6 +483,92 @@
                                Foreground="Gray"/>
                 </Grid>
             </TabItem>
+
+            <TabItem Header="Audit Log">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Project Selection -->
+                    <GroupBox Grid.Row="0" Header="Select Project" Margin="5">
+                        <Grid Margin="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox Grid.Column="0" Name="AuditLogProjectComboBox"
+                                      DisplayMemberPath="ProjectName"
+                                      SelectionChanged="AuditLogProjectComboBox_SelectionChanged"
+                                      Height="25" Margin="0,0,5,0"/>
+                            <TextBlock Grid.Column="1" Name="AuditLogProjectNameTextBlock"
+                                       VerticalAlignment="Center" FontWeight="Bold" Foreground="DarkBlue"
+                                       Margin="10,0,0,0"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- Filters -->
+                    <GroupBox Grid.Row="1" Header="Filters" Margin="5">
+                        <Grid Margin="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="Entity Type:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <ComboBox Grid.Column="1" Name="EntityTypeFilterComboBox" Height="25" Margin="0,0,10,0" SelectionChanged="AuditLogFilter_Changed">
+                                <ComboBoxItem Content="All" IsSelected="True"/>
+                                <ComboBoxItem Content="Equipment"/>
+                                <ComboBoxItem Content="Line"/>
+                                <ComboBoxItem Content="Instrument"/>
+                                <ComboBoxItem Content="Drawing"/>
+                                <ComboBoxItem Content="Project"/>
+                            </ComboBox>
+
+                            <TextBlock Grid.Column="2" Text="Action:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <ComboBox Grid.Column="3" Name="ActionFilterComboBox" Height="25" Margin="0,0,10,0" SelectionChanged="AuditLogFilter_Changed">
+                                <ComboBoxItem Content="All" IsSelected="True"/>
+                                <ComboBoxItem Content="Created"/>
+                                <ComboBoxItem Content="Updated"/>
+                                <ComboBoxItem Content="Deleted"/>
+                                <ComboBoxItem Content="Batch Tagged"/>
+                                <ComboBoxItem Content="Synchronized"/>
+                            </ComboBox>
+
+                            <TextBlock Grid.Column="4" Text="Last:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <ComboBox Grid.Column="5" Name="TimeRangeFilterComboBox" Height="25" Margin="0,0,10,0" SelectionChanged="AuditLogFilter_Changed">
+                                <ComboBoxItem Content="24 Hours" IsSelected="True"/>
+                                <ComboBoxItem Content="7 Days"/>
+                                <ComboBoxItem Content="30 Days"/>
+                                <ComboBoxItem Content="All Time"/>
+                            </ComboBox>
+
+                            <Button Grid.Column="7" Content="Refresh" Width="80" Height="25" Click="RefreshAuditLog_Click"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- Audit Log Grid -->
+                    <DataGrid Grid.Row="2" Margin="5" Name="AuditLogDataGrid"
+                              AutoGenerateColumns="False" IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" Width="140"/>
+                            <DataGridTextColumn Header="Entity Type" Binding="{Binding EntityType}" Width="100"/>
+                            <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="100"/>
+                            <DataGridTextColumn Header="Performed By" Binding="{Binding PerformedBy}" Width="120"/>
+                            <DataGridTextColumn Header="Change Details" Binding="{Binding ChangeDetails}" Width="*"/>
+                            <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="150"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
         </TabControl>
 
         <!-- Status Bar -->

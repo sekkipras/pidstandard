@@ -3,6 +3,7 @@ using PIDStandardization.Core.Interfaces;
 using PIDStandardization.Data.Configuration;
 using PIDStandardization.Data.Context;
 using PIDStandardization.Data.Repositories;
+using PIDStandardization.Services;
 
 namespace PIDStandardization.AutoCAD.Services
 {
@@ -31,6 +32,14 @@ namespace PIDStandardization.AutoCAD.Services
             }
 
             return _unitOfWork;
+        }
+
+        /// <summary>
+        /// Gets an instance of AuditLogService using the current Unit of Work
+        /// </summary>
+        public static AuditLogService GetAuditLogService()
+        {
+            return new AuditLogService(GetUnitOfWork());
         }
 
         /// <summary>
