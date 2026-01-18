@@ -77,18 +77,20 @@ namespace PIDStandardization.Services.TaggingServices
                 throw new InvalidOperationException("Project not found");
             }
 
-            // Get existing equipment with similar tags
-            var existingEquipment = await _unitOfWork.Equipment.FindAsync(e => e.ProjectId == projectId);
+            // Get maximum sequence number for this prefix (optimized - doesn't load all equipment)
+            // Build prefix based on tagging mode
+            string prefix;
+            if (project.TaggingMode == TaggingMode.Custom)
+            {
+                prefix = $"P-{area ?? "000"}-{equipmentType}";
+            }
+            else
+            {
+                prefix = equipmentType;
+            }
 
-            // Simple sequential numbering for now
-            var maxNumber = existingEquipment
-                .Select(e => e.TagNumber)
-                .Select(tag => ExtractSequenceNumber(tag))
-                .Where(num => num.HasValue)
-                .DefaultIfEmpty(0)
-                .Max();
-
-            var nextNumber = (maxNumber ?? 0) + 1;
+            var maxNumber = await _unitOfWork.Equipment.GetMaxSequenceNumberAsync(projectId, prefix);
+            var nextNumber = maxNumber + 1;
 
             // Generate based on tagging mode
             if (project.TaggingMode == TaggingMode.Custom)

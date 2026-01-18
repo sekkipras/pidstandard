@@ -1,11 +1,15 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using PIDStandardization.Core.Entities;
 using PIDStandardization.Core.Interfaces;
 using PIDStandardization.Services;
 using PIDStandardization.Services.TaggingServices;
+using PIDStandardization.UI.Helpers;
 using PIDStandardization.UI.Views;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Data.SqlClient;
 
 namespace PIDStandardization.UI
 {
@@ -16,6 +20,7 @@ namespace PIDStandardization.UI
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger<MainWindow> _logger;
         private bool _isLoadingEquipmentProjects = false;
         private bool _isLoadingLinesProjects = false;
         private bool _isLoadingInstrumentsProjects = false;
@@ -23,11 +28,12 @@ namespace PIDStandardization.UI
         private Project? _lastSelectedProject = null;
         private Project? _selectedProject = null;
 
-        public MainWindow(IUnitOfWork unitOfWork, IServiceProvider serviceProvider)
+        public MainWindow(IUnitOfWork unitOfWork, IServiceProvider serviceProvider, ILogger<MainWindow> logger)
         {
             InitializeComponent();
             _unitOfWork = unitOfWork;
             _serviceProvider = serviceProvider;
+            _logger = logger;
             Loaded += MainWindow_Loaded;
         }
 
@@ -99,7 +105,9 @@ namespace PIDStandardization.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error initializing tabs: {ex.Message}", "Error",
+                var (userMessage, logMessage, correlationId) = UserErrorMessages.FormatException(ex, "initializing tabs");
+                _logger.LogError(logMessage);
+                MessageBox.Show(userMessage, "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -213,9 +221,19 @@ namespace PIDStandardization.UI
                 EquipmentDataGrid.ItemsSource = equipment;
                 StatusTextBlock.Text = $"Loaded {equipment.Count()} equipment item(s)";
             }
+            catch (SqlException sqlEx)
+            {
+                var userMessage = UserErrorMessages.GetDatabaseError(sqlEx);
+                _logger.LogError(sqlEx, "Error loading equipment for project {ProjectId}", projectId);
+                MessageBox.Show(userMessage, "Database Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                StatusTextBlock.Text = "Error loading equipment";
+            }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading equipment: {ex.Message}", "Error",
+                var (userMessage, logMessage, correlationId) = UserErrorMessages.FormatException(ex, "loading equipment");
+                _logger.LogError(logMessage);
+                MessageBox.Show(userMessage, "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 StatusTextBlock.Text = "Error loading equipment";
             }
@@ -298,9 +316,18 @@ namespace PIDStandardization.UI
                     await LoadEquipmentForProject(selectedEquipment.ProjectId);
                     StatusTextBlock.Text = $"Deleted equipment: {selectedEquipment.TagNumber}";
                 }
+                catch (SqlException sqlEx)
+                {
+                    var userMessage = UserErrorMessages.GetDatabaseError(sqlEx);
+                    _logger.LogError(sqlEx, "Error deleting equipment {TagNumber}", selectedEquipment.TagNumber);
+                    MessageBox.Show(userMessage, "Database Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error deleting equipment: {ex.Message}", "Error",
+                    var (userMessage, logMessage, correlationId) = UserErrorMessages.FormatException(ex, "deleting equipment");
+                    _logger.LogError(logMessage);
+                    MessageBox.Show(userMessage, "Error",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -334,9 +361,18 @@ namespace PIDStandardization.UI
                     MessageBox.Show($"Equipment list exported successfully!\n\nFile: {saveFileDialog.FileName}",
                         "Export Successful", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
+                catch (IOException ioEx)
+                {
+                    var userMessage = UserErrorMessages.GetFileAccessError(ioEx);
+                    _logger.LogError(ioEx, "Error exporting equipment to {FileName}", saveFileDialog.FileName);
+                    MessageBox.Show(userMessage, "File Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error exporting equipment: {ex.Message}", "Error",
+                    var (userMessage, logMessage, correlationId) = UserErrorMessages.FormatException(ex, "exporting equipment");
+                    _logger.LogError(logMessage);
+                    MessageBox.Show(userMessage, "Error",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -363,9 +399,8 @@ namespace PIDStandardization.UI
                 {
                     StatusTextBlock.Text = "Importing equipment...";
 
-                    // Get existing tag numbers to prevent duplicates
-                    var existingEquipment = await _unitOfWork.Equipment.FindAsync(e => e.ProjectId == selectedProject.ProjectId);
-                    var existingTags = existingEquipment.Select(e => e.TagNumber).ToList();
+                    // Get existing tag numbers to prevent duplicates (optimized - only loads tag numbers)
+                    var existingTags = await _unitOfWork.Equipment.GetTagNumbersAsync(selectedProject.ProjectId);
 
                     // Import from Excel
                     var importService = new ExcelImportService();
@@ -379,9 +414,18 @@ namespace PIDStandardization.UI
 
                     StatusTextBlock.Text = $"Import complete: {result.SuccessCount} added, {result.SkippedCount} skipped, {result.ErrorCount} errors";
                 }
+                catch (IOException ioEx)
+                {
+                    var userMessage = UserErrorMessages.GetFileAccessError(ioEx);
+                    _logger.LogError(ioEx, "Error importing equipment from {FileName}", openFileDialog.FileName);
+                    MessageBox.Show(userMessage, "File Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error importing equipment: {ex.Message}", "Error",
+                    var userMessage = UserErrorMessages.GetImportError(openFileDialog.FileName, ex);
+                    _logger.LogError(ex, "Error importing equipment from {FileName}", openFileDialog.FileName);
+                    MessageBox.Show(userMessage, "Import Error",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -684,13 +728,12 @@ namespace PIDStandardization.UI
                 {
                     StatusTextBlock.Text = "Importing lines...";
 
-                    // Get existing line numbers
+                    // Get existing line numbers (optimized - only loads line numbers)
                     var existingLines = await _unitOfWork.Lines.FindAsync(l => l.ProjectId == selectedProject.ProjectId);
                     var existingLineNumbers = existingLines.Select(l => l.LineNumber).ToList();
 
-                    // Get equipment mapping for From/To associations
-                    var allEquipment = await _unitOfWork.Equipment.FindAsync(e => e.ProjectId == selectedProject.ProjectId);
-                    var equipmentTagMap = allEquipment.ToDictionary(e => e.TagNumber, e => e.EquipmentId);
+                    // Get equipment mapping for From/To associations (optimized - only loads TagNumber and EquipmentId)
+                    var equipmentTagMap = await _unitOfWork.Equipment.GetTagToIdMappingAsync(selectedProject.ProjectId);
 
                     // Import from Excel
                     var importService = new ExcelImportService();

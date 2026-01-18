@@ -2,7 +2,9 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
+using Microsoft.Data.SqlClient;
 using PIDStandardization.AutoCAD.Services;
+using Serilog;
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace PIDStandardization.AutoCAD.Commands
@@ -198,9 +200,33 @@ namespace PIDStandardization.AutoCAD.Commands
 
                 ed.WriteMessage("\nCommand completed successfully.");
             }
+            catch (SqlException sqlEx)
+            {
+                Log.Error(sqlEx, "Database error in PIDTAG command");
+                ed.WriteMessage("\n╔═══════════════════════════════════════════════════════╗");
+                ed.WriteMessage("\n║  DATABASE CONNECTION ERROR                            ║");
+                ed.WriteMessage("\n╟───────────────────────────────────────────────────────╢");
+                ed.WriteMessage("\n║  Cannot connect to database.                          ║");
+                ed.WriteMessage("\n║                                                       ║");
+                ed.WriteMessage("\n║  Please check:                                        ║");
+                ed.WriteMessage("\n║  • SQL Server is running                              ║");
+                ed.WriteMessage("\n║  • Connection string in appsettings.json             ║");
+                ed.WriteMessage("\n║  • Network connectivity                               ║");
+                ed.WriteMessage("\n╚═══════════════════════════════════════════════════════╝");
+                ed.WriteMessage($"\nError Code: {sqlEx.Number}");
+            }
             catch (System.Exception ex)
             {
-                ed.WriteMessage($"\nError: {ex.Message}");
+                var correlationId = Guid.NewGuid();
+                Log.Error(ex, "[{CorrelationId}] Error in PIDTAG command", correlationId);
+                ed.WriteMessage($"\n╔═══════════════════════════════════════════════════════╗");
+                ed.WriteMessage($"\n║  ERROR                                                ║");
+                ed.WriteMessage($"\n╟───────────────────────────────────────────────────────╢");
+                ed.WriteMessage($"\n║  {ex.Message,-52} ║");
+                ed.WriteMessage($"\n║                                                       ║");
+                ed.WriteMessage($"\n║  Error ID: {correlationId,-37} ║");
+                ed.WriteMessage($"\n║  Check log file for details                           ║");
+                ed.WriteMessage($"\n╚═══════════════════════════════════════════════════════╝");
             }
         }
 
@@ -418,10 +444,30 @@ namespace PIDStandardization.AutoCAD.Commands
 
                 ed.WriteMessage("\nCommand completed successfully.");
             }
+            catch (SqlException sqlEx)
+            {
+                Log.Error(sqlEx, "Database error in PIDBATCHTAG command");
+                ed.WriteMessage("\n╔═══════════════════════════════════════════════════════╗");
+                ed.WriteMessage("\n║  DATABASE ERROR                                       ║");
+                ed.WriteMessage("\n╟───────────────────────────────────────────────────────╢");
+                ed.WriteMessage("\n║  Failed to save equipment to database.                ║");
+                ed.WriteMessage("\n║                                                       ║");
+                ed.WriteMessage("\n║  Please check SQL Server connection and try again.    ║");
+                ed.WriteMessage("\n╚═══════════════════════════════════════════════════════╝");
+                ed.WriteMessage($"\nDatabase Error Code: {sqlEx.Number}");
+            }
             catch (System.Exception ex)
             {
-                ed.WriteMessage($"\nError: {ex.Message}");
-                ed.WriteMessage($"\nStack trace: {ex.StackTrace}");
+                var correlationId = Guid.NewGuid();
+                Log.Error(ex, "[{CorrelationId}] Error in PIDBATCHTAG command", correlationId);
+                ed.WriteMessage("\n╔═══════════════════════════════════════════════════════╗");
+                ed.WriteMessage("\n║  BATCH TAGGING ERROR                                  ║");
+                ed.WriteMessage("\n╟───────────────────────────────────────────────────────╢");
+                ed.WriteMessage($"\n║  Error ID: {correlationId,-37} ║");
+                ed.WriteMessage("\n║                                                       ║");
+                ed.WriteMessage("\n║  Some equipment may have been tagged before error.    ║");
+                ed.WriteMessage("\n║  Check log file for details.                          ║");
+                ed.WriteMessage("\n╚═══════════════════════════════════════════════════════╝");
             }
         }
 
@@ -479,7 +525,15 @@ namespace PIDStandardization.AutoCAD.Commands
             }
             catch (System.Exception ex)
             {
-                ed.WriteMessage($"\nError: {ex.Message}");
+                var correlationId = Guid.NewGuid();
+                Log.Error(ex, "[{CorrelationId}] Error in PIDEXTRACT command", correlationId);
+                ed.WriteMessage($"\n╔═══════════════════════════════════════════════════════╗");
+                ed.WriteMessage($"\n║  EXTRACTION ERROR                                     ║");
+                ed.WriteMessage($"\n╟───────────────────────────────────────────────────────╢");
+                ed.WriteMessage($"\n║  Failed to extract equipment from drawing.            ║");
+                ed.WriteMessage($"\n║                                                       ║");
+                ed.WriteMessage($"\n║  Error ID: {correlationId,-37} ║");
+                ed.WriteMessage($"\n╚═══════════════════════════════════════════════════════╝");
             }
         }
 
@@ -614,10 +668,30 @@ namespace PIDStandardization.AutoCAD.Commands
                 ed.WriteMessage($"\n  Skipped (already exists): {skippedCount} items");
                 ed.WriteMessage("\n\nYou can now view and manage these equipment in the WPF application.");
             }
+            catch (SqlException sqlEx)
+            {
+                Log.Error(sqlEx, "Database error in PIDEXTRACTDB command");
+                ed.WriteMessage("\n╔═══════════════════════════════════════════════════════╗");
+                ed.WriteMessage("\n║  DATABASE ERROR                                       ║");
+                ed.WriteMessage("\n╟───────────────────────────────────────────────────────╢");
+                ed.WriteMessage("\n║  Equipment extracted but failed to save to database.  ║");
+                ed.WriteMessage("\n║                                                       ║");
+                ed.WriteMessage("\n║  Please check:                                        ║");
+                ed.WriteMessage("\n║  • SQL Server is running                              ║");
+                ed.WriteMessage("\n║  • Database exists and is accessible                  ║");
+                ed.WriteMessage("\n╚═══════════════════════════════════════════════════════╝");
+            }
             catch (System.Exception ex)
             {
-                ed.WriteMessage($"\nError: {ex.Message}");
-                ed.WriteMessage($"\nStack trace: {ex.StackTrace}");
+                var correlationId = Guid.NewGuid();
+                Log.Error(ex, "[{CorrelationId}] Error in PIDEXTRACTDB command", correlationId);
+                ed.WriteMessage("\n╔═══════════════════════════════════════════════════════╗");
+                ed.WriteMessage("\n║  EXTRACTION TO DATABASE ERROR                         ║");
+                ed.WriteMessage("\n╟───────────────────────────────────────────────────────╢");
+                ed.WriteMessage($"\n║  Error ID: {correlationId,-37} ║");
+                ed.WriteMessage("\n║                                                       ║");
+                ed.WriteMessage("\n║  Check log file for details.                          ║");
+                ed.WriteMessage("\n╚═══════════════════════════════════════════════════════╝");
             }
         }
 
@@ -739,7 +813,15 @@ namespace PIDStandardization.AutoCAD.Commands
             }
             catch (System.Exception ex)
             {
-                ed.WriteMessage($"\nError: {ex.Message}");
+                var correlationId = Guid.NewGuid();
+                Log.Error(ex, "[{CorrelationId}] Error in PIDSTATUS command", correlationId);
+                ed.WriteMessage($"\n╔═══════════════════════════════════════════════════════╗");
+                ed.WriteMessage($"\n║  STATUS VISUALIZATION ERROR                           ║");
+                ed.WriteMessage($"\n╟───────────────────────────────────────────────────────╢");
+                ed.WriteMessage($"\n║  Failed to display tag status.                        ║");
+                ed.WriteMessage($"\n║                                                       ║");
+                ed.WriteMessage($"\n║  Error ID: {correlationId,-37} ║");
+                ed.WriteMessage($"\n╚═══════════════════════════════════════════════════════╝");
             }
         }
 
@@ -1072,10 +1154,30 @@ namespace PIDStandardization.AutoCAD.Commands
                 ed.WriteMessage("\n╚═══════════════════════════════════════════╝");
                 ed.WriteMessage("\n  (+) Added    (~) Updated");
             }
+            catch (SqlException sqlEx)
+            {
+                Log.Error(sqlEx, "Database error in PIDSYNC command");
+                ed.WriteMessage("\n╔═══════════════════════════════════════════════════════╗");
+                ed.WriteMessage("\n║  SYNCHRONIZATION FAILED                               ║");
+                ed.WriteMessage("\n╟───────────────────────────────────────────────────────╢");
+                ed.WriteMessage("\n║  Database connection error during sync.               ║");
+                ed.WriteMessage("\n║                                                       ║");
+                ed.WriteMessage("\n║  Changes may be partially applied.                    ║");
+                ed.WriteMessage("\n║  Please check database connection and try again.      ║");
+                ed.WriteMessage("\n╚═══════════════════════════════════════════════════════╝");
+                ed.WriteMessage($"\nDatabase Error Code: {sqlEx.Number}");
+            }
             catch (System.Exception ex)
             {
-                ed.WriteMessage($"\nError during sync: {ex.Message}");
-                ed.WriteMessage($"\nStack trace: {ex.StackTrace}");
+                var correlationId = Guid.NewGuid();
+                Log.Error(ex, "[{CorrelationId}] Error in PIDSYNC command", correlationId);
+                ed.WriteMessage("\n╔═══════════════════════════════════════════════════════╗");
+                ed.WriteMessage("\n║  SYNCHRONIZATION ERROR                                ║");
+                ed.WriteMessage("\n╟───────────────────────────────────────────────────────╢");
+                ed.WriteMessage($"\n║  Error ID: {correlationId,-37} ║");
+                ed.WriteMessage("\n║                                                       ║");
+                ed.WriteMessage("\n║  Sync may be incomplete. Check log for details.       ║");
+                ed.WriteMessage("\n╚═══════════════════════════════════════════════════════╝");
             }
         }
     }

@@ -8,7 +8,7 @@ namespace PIDStandardization.Core.Interfaces
     public interface IUnitOfWork : IDisposable
     {
         IRepository<Project> Projects { get; }
-        IRepository<Equipment> Equipment { get; }
+        IEquipmentRepository Equipment { get; }
         IRepository<Drawing> Drawings { get; }
         IRepository<Line> Lines { get; }
         IRepository<Instrument> Instruments { get; }
