@@ -1456,6 +1456,37 @@ namespace PIDStandardization.UI
 
         #endregion
 
+        #region Tag Renumbering Methods
+
+        private void TagRenumberingWizard_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedProject == null)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            using var scope = _serviceProvider.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+            var dialog = new Views.TagRenumberingDialog(unitOfWork, _selectedProject);
+            dialog.Owner = this;
+
+            if (dialog.ShowDialog() == true)
+            {
+                StatusTextBlock.Text = "Tag renumbering completed successfully";
+
+                // Refresh equipment grid if on equipment tab
+                if (MainTabControl.SelectedIndex == 1 && EquipmentProjectComboBox.SelectedItem is Project project)
+                {
+                    _ = LoadEquipmentForProject(project.ProjectId);
+                }
+            }
+        }
+
+        #endregion
+
         #region Audit Log Methods
 
         private bool _isLoadingAuditLogProjects = false;
