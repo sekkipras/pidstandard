@@ -6,6 +6,8 @@
 **Current Application Version:** 1.0.0
 **Maturity Level:** Proof of Concept (PoC) / Internal Tool
 
+> **Note**: This assessment was performed on an earlier version that included BlockLearningService. The block learning feature has since been removed and will be added in a future release. References to BlockLearningService in this document are for historical context only.
+
 ---
 
 ## Executive Summary

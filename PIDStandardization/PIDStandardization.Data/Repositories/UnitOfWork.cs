@@ -19,21 +19,21 @@ namespace PIDStandardization.Data.Repositories
 
             // Initialize repositories
             Projects = new Repository<Project>(_context);
-            Equipment = new Repository<Equipment>(_context);
+            Equipment = new EquipmentRepository(_context);
             Drawings = new Repository<Drawing>(_context);
             Lines = new Repository<Line>(_context);
             Instruments = new Repository<Instrument>(_context);
             ValidationRules = new Repository<ValidationRule>(_context);
-            BlockMappings = new Repository<BlockMapping>(_context);
+            AuditLogs = new Repository<AuditLog>(_context);
         }
 
         public IRepository<Project> Projects { get; private set; }
-        public IRepository<Equipment> Equipment { get; private set; }
+        public IEquipmentRepository Equipment { get; private set; }
         public IRepository<Drawing> Drawings { get; private set; }
         public IRepository<Line> Lines { get; private set; }
         public IRepository<Instrument> Instruments { get; private set; }
         public IRepository<ValidationRule> ValidationRules { get; private set; }
-        public IRepository<BlockMapping> BlockMappings { get; private set; }
+        public IRepository<AuditLog> AuditLogs { get; private set; }
 
         public async Task<int> SaveChangesAsync()
         {

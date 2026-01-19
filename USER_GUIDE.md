@@ -24,7 +24,6 @@
 On first launch, you'll see a welcome screen explaining the key features:
 - **Dual Tagging Modes**: ISA and Custom tagging standards
 - **AutoCAD Integration**: Extract equipment from P&ID drawings
-- **Smart Block Learning**: AI-powered block type recognition
 - **Excel Import/Export**: Bulk operations support
 - **Version Control**: Track drawing versions and equipment changes
 
@@ -305,8 +304,7 @@ Synchronize equipment between the drawing and database (bi-directional).
    - **Cancel**: Exit without changes
 
 **Features:**
-- Automatically detects equipment type using learned block mappings
-- Confidence-based suggestions improve over time
+- Automatically detects equipment type from block names
 - Safe operation - shows analysis before making changes
 - Useful for keeping drawing and database in sync during iterative design
 
@@ -331,60 +329,6 @@ Display plugin information and available commands.
 **Usage:**
 1. Type `PIDINFO` and press Enter
 2. Plugin version and command list is displayed
-
----
-
-## Block Learning System
-
-The AutoCAD plugin includes an intelligent Block Learning System that improves equipment type detection over time.
-
-### How It Works
-1. **Initial Detection**: When you first extract equipment, the plugin uses pattern matching to detect equipment types from block names
-   - Example: "PUMP-100" → detected as "Pump"
-   - Example: "V-201" → detected as "Valve"
-
-2. **Learning**: Each time equipment is extracted using PIDEXTRACTDB or PIDSYNC, the plugin learns the mapping between block name and equipment type
-   - Mappings are stored in: `%AppData%\PIDStandardization\block_mappings.json`
-   - Each mapping has a confidence score (0.0 to 1.0)
-
-3. **Improvement**: Over time, the plugin becomes better at detecting your specific block naming conventions
-   - Confidence increases with usage count
-   - User-confirmed mappings get higher confidence
-
-4. **Automatic Application**: When extracting equipment, the plugin:
-   - Checks for learned mappings first
-   - If confidence > 0.5, uses the learned equipment type
-   - Otherwise, falls back to pattern matching
-   - Learns the mapping for future use
-
-### Benefits
-- **Faster extraction**: No need to manually classify equipment types
-- **Consistency**: Same block names always map to same equipment types
-- **Customization**: Adapts to your company's block naming standards
-- **Low maintenance**: Fully automatic - no configuration needed
-
-### Viewing Learned Mappings
-The block mappings file (`block_mappings.json`) contains:
-```json
-[
-  {
-    "BlockName": "PUMP-100",
-    "EquipmentType": "Pump",
-    "UsageCount": 5,
-    "ConfidenceScore": 0.5,
-    "IsUserConfirmed": false,
-    "FirstUsedDate": "2026-01-17T10:30:00Z",
-    "LastUsedDate": "2026-01-17T14:45:00Z"
-  }
-]
-```
-
-### Resetting Learning
-To reset learned mappings:
-1. Close AutoCAD
-2. Navigate to `%AppData%\PIDStandardization\`
-3. Delete `block_mappings.json`
-4. The plugin will start learning from scratch
 
 ---
 
@@ -550,7 +494,6 @@ Server=(localdb)\\mssqllocaldb;Database=PIDStandardization;Trusted_Connection=tr
 - `Instruments`: Instrument records
 - `Drawings`: Drawing metadata
 - `ValidationRules`: Tag validation rules
-- `BlockMappings`: AutoCAD block type mappings
 
 ---
 

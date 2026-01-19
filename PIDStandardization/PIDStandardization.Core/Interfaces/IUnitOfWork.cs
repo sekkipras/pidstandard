@@ -8,12 +8,12 @@ namespace PIDStandardization.Core.Interfaces
     public interface IUnitOfWork : IDisposable
     {
         IRepository<Project> Projects { get; }
-        IRepository<Equipment> Equipment { get; }
+        IEquipmentRepository Equipment { get; }
         IRepository<Drawing> Drawings { get; }
         IRepository<Line> Lines { get; }
         IRepository<Instrument> Instruments { get; }
         IRepository<ValidationRule> ValidationRules { get; }
-        IRepository<BlockMapping> BlockMappings { get; }
+        IRepository<AuditLog> AuditLogs { get; }
 
         Task<int> SaveChangesAsync();
         Task BeginTransactionAsync();

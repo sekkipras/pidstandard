@@ -19,7 +19,7 @@ namespace PIDStandardization.Data.Context
         public DbSet<Line> Lines { get; set; }
         public DbSet<Instrument> Instruments { get; set; }
         public DbSet<ValidationRule> ValidationRules { get; set; }
-        public DbSet<BlockMapping> BlockMappings { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,7 +32,7 @@ namespace PIDStandardization.Data.Context
             ConfigureLine(modelBuilder);
             ConfigureInstrument(modelBuilder);
             ConfigureValidationRule(modelBuilder);
-            ConfigureBlockMapping(modelBuilder);
+            ConfigureAuditLog(modelBuilder);
         }
 
         private void ConfigureProject(ModelBuilder modelBuilder)
@@ -209,20 +209,29 @@ namespace PIDStandardization.Data.Context
             });
         }
 
-        private void ConfigureBlockMapping(ModelBuilder modelBuilder)
+        private void ConfigureAuditLog(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<BlockMapping>(entity =>
+            modelBuilder.Entity<AuditLog>(entity =>
             {
-                entity.HasKey(e => e.BlockMappingId);
-                entity.Property(e => e.BlockName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.EquipmentType).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.CreatedBy).HasMaxLength(100);
+                entity.HasKey(e => e.AuditLogId);
+                entity.Property(e => e.EntityType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Action).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.PerformedBy).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Timestamp).IsRequired();
+                entity.Property(e => e.ChangeDetails).HasMaxLength(2000);
+                entity.Property(e => e.Source).HasMaxLength(100);
 
-                // Unique index on BlockName for fast lookup
-                entity.HasIndex(e => e.BlockName).IsUnique();
+                // Indexes for common queries
+                entity.HasIndex(e => e.EntityType);
+                entity.HasIndex(e => e.EntityId);
+                entity.HasIndex(e => e.Timestamp);
+                entity.HasIndex(e => new { e.EntityType, e.EntityId, e.Timestamp });
 
-                // Index on EquipmentType for reporting
-                entity.HasIndex(e => e.EquipmentType);
+                // Foreign key relationship to Project
+                entity.HasOne(e => e.Project)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
         }
     }

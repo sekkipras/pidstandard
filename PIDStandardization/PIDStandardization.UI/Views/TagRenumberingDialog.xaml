@@ -1,0 +1,152 @@
+<Window x:Class="PIDStandardization.UI.Views.TagRenumberingDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Tag Renumbering Wizard" Height="700" Width="900"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#2196F3" Padding="15">
+            <StackPanel>
+                <TextBlock Text="Tag Renumbering Wizard" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Bulk renumber equipment tags with automatic sequencing and pattern matching"
+                           FontSize="12" Foreground="WhiteSmoke" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Filter Section -->
+            <GroupBox Grid.Row="0" Header="Selection Criteria" Margin="5" Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Equipment Type:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <ComboBox Grid.Row="0" Grid.Column="1" Name="EquipmentTypeFilterComboBox" Height="25" Margin="0,0,10,0" SelectionChanged="FilterChanged"/>
+
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Area:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <ComboBox Grid.Row="0" Grid.Column="3" Name="AreaFilterComboBox" Height="25" Margin="0,0,10,0" SelectionChanged="FilterChanged"/>
+
+                    <Button Grid.Row="0" Grid.Column="4" Content="Select All" Width="100" Height="25" HorizontalAlignment="Right" Margin="5,0,0,0" Click="SelectAll_Click"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Current Tag Pattern:" VerticalAlignment="Center" Margin="0,10,10,0"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Name="CurrentPatternTextBox" Height="25" Margin="0,10,10,0"
+                             ToolTip="Filter by current tag pattern (e.g., P-*, *-001)"/>
+
+                    <Button Grid.Row="1" Grid.Column="4" Content="Apply Filter" Width="100" Height="25" HorizontalAlignment="Right" Margin="5,10,0,0" Click="ApplyFilter_Click"/>
+                </Grid>
+            </GroupBox>
+
+            <!-- Renumbering Pattern -->
+            <GroupBox Grid.Row="1" Header="Renumbering Pattern" Margin="5" Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Pattern:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Name="NewPatternTextBox" Height="25" Margin="0,0,10,0"
+                             TextChanged="NewPattern_Changed"
+                             ToolTip="Use {TYPE} for equipment type, {SEQ} for sequence number, {AREA} for area code"/>
+                    <Button Grid.Row="0" Grid.Column="2" Content="Preview Changes" Width="120" Height="25" Click="PreviewChanges_Click" Background="LightGreen"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Start Number:" VerticalAlignment="Center" Margin="0,10,10,0"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Name="StartNumberTextBox" Text="1" Height="25" Margin="0,10,10,0"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Increment:" VerticalAlignment="Center" Margin="0,10,10,0"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Name="IncrementTextBox" Text="1" Height="25" Margin="0,10,10,0"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="2" Name="PatternExampleTextBlock" VerticalAlignment="Center"
+                               FontStyle="Italic" Foreground="DarkBlue" Margin="10,10,0,0"/>
+                </Grid>
+            </GroupBox>
+
+            <!-- Equipment List with Preview -->
+            <DataGrid Grid.Row="2" Name="EquipmentDataGrid" Margin="5" AutoGenerateColumns="False">
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected}" Width="60"/>
+                    <DataGridTextColumn Header="Current Tag" Binding="{Binding CurrentTag}" Width="150" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Equipment Type" Binding="{Binding EquipmentType}" Width="150" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Area" Binding="{Binding Area}" Width="80" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="New Tag (Preview)" Binding="{Binding NewTag}" Width="150" IsReadOnly="True">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="Background" Value="LightYellow"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Summary -->
+            <GroupBox Grid.Row="3" Header="Summary" Margin="5" Padding="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Total Equipment:" FontWeight="SemiBold"/>
+                        <TextBlock Name="TotalEquipmentTextBlock" Text="0" FontSize="16" Margin="0,5,0,0"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Selected for Renumbering:" FontWeight="SemiBold"/>
+                        <TextBlock Name="SelectedCountTextBlock" Text="0" FontSize="16" Margin="0,5,0,0" Foreground="DarkBlue"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Status:" FontWeight="SemiBold"/>
+                        <TextBlock Name="StatusTextBlock" Text="Ready" FontSize="16" Margin="0,5,0,0" Foreground="Green"/>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+        </Grid>
+
+        <!-- Action Buttons -->
+        <Border Grid.Row="2" Background="#F5F5F5" Padding="10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Apply Renumbering" Width="140" Height="35" Margin="5" Click="Apply_Click"
+                        Background="#4CAF50" Foreground="White" FontWeight="Bold"/>
+                <Button Content="Cancel" Width="100" Height="35" Margin="5" Click="Cancel_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

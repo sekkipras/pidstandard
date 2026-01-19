@@ -1,5 +1,6 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using PIDStandardization.Core.Configuration;
 
 namespace PIDStandardization.AutoCAD.Models
 {
@@ -23,15 +24,15 @@ namespace PIDStandardization.AutoCAD.Models
         /// </summary>
         public string? GetTagNumber()
         {
-            // First check attributes for common tag attribute names
-            if (Attributes.ContainsKey("TAG"))
-                return Attributes["TAG"];
-            if (Attributes.ContainsKey("TAG_NUMBER"))
-                return Attributes["TAG_NUMBER"];
-            if (Attributes.ContainsKey("TAGNO"))
-                return Attributes["TAGNO"];
-            if (Attributes.ContainsKey("EQUIPMENT_TAG"))
-                return Attributes["EQUIPMENT_TAG"];
+            // Get configured tag attribute names
+            var tagAttributeNames = ConfigurationService.Instance.Settings.Tagging.TagAttributeNames;
+
+            // Check attributes for configured tag attribute names
+            foreach (var attrName in tagAttributeNames)
+            {
+                if (Attributes.ContainsKey(attrName.ToUpper()))
+                    return Attributes[attrName.ToUpper()];
+            }
 
             // Check extended data
             if (ExtendedData.Count > 1)
@@ -44,32 +45,11 @@ namespace PIDStandardization.AutoCAD.Models
         }
 
         /// <summary>
-        /// Infers equipment type from block name
+        /// Infers equipment type from block name using configuration
         /// </summary>
         public string GetEquipmentType()
         {
-            string upperName = BlockName.ToUpper();
-
-            if (upperName.Contains("PUMP") || upperName.Contains("PMP"))
-                return "Pump";
-            if (upperName.Contains("VALVE") || upperName.Contains("VLV"))
-                return "Valve";
-            if (upperName.Contains("TANK") || upperName.Contains("TK"))
-                return "Tank";
-            if (upperName.Contains("VESSEL") || upperName.Contains("VS"))
-                return "Vessel";
-            if (upperName.Contains("HX") || upperName.Contains("HEAT") || upperName.Contains("EXCHANGER"))
-                return "Heat Exchanger";
-            if (upperName.Contains("FILTER") || upperName.Contains("FLT"))
-                return "Filter";
-            if (upperName.Contains("COMP"))
-                return "Compressor";
-            if (upperName.Contains("SEP"))
-                return "Separator";
-            if (upperName.Contains("INST") || upperName.Contains("INSTRUMENT"))
-                return "Instrument";
-
-            return "Unknown";
+            return ConfigurationService.Instance.GetEquipmentType(BlockName);
         }
     }
 }

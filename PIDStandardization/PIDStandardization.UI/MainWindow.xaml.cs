@@ -1,11 +1,15 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using PIDStandardization.Core.Entities;
 using PIDStandardization.Core.Interfaces;
 using PIDStandardization.Services;
 using PIDStandardization.Services.TaggingServices;
+using PIDStandardization.UI.Helpers;
 using PIDStandardization.UI.Views;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Data.SqlClient;
 
 namespace PIDStandardization.UI
 {
@@ -16,6 +20,7 @@ namespace PIDStandardization.UI
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger<MainWindow> _logger;
         private bool _isLoadingEquipmentProjects = false;
         private bool _isLoadingLinesProjects = false;
         private bool _isLoadingInstrumentsProjects = false;
@@ -23,11 +28,12 @@ namespace PIDStandardization.UI
         private Project? _lastSelectedProject = null;
         private Project? _selectedProject = null;
 
-        public MainWindow(IUnitOfWork unitOfWork, IServiceProvider serviceProvider)
+        public MainWindow(IUnitOfWork unitOfWork, IServiceProvider serviceProvider, ILogger<MainWindow> logger)
         {
             InitializeComponent();
             _unitOfWork = unitOfWork;
             _serviceProvider = serviceProvider;
+            _logger = logger;
             Loaded += MainWindow_Loaded;
         }
 
@@ -82,6 +88,9 @@ namespace PIDStandardization.UI
                 // Load project into all tab ComboBoxes
                 var projects = new[] { _selectedProject };
 
+                DashboardProjectComboBox.ItemsSource = projects;
+                DashboardProjectComboBox.SelectedIndex = 0;
+
                 EquipmentProjectComboBox.ItemsSource = projects;
                 EquipmentProjectComboBox.SelectedIndex = 0;
 
@@ -96,7 +105,9 @@ namespace PIDStandardization.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error initializing tabs: {ex.Message}", "Error",
+                var (userMessage, logMessage, correlationId) = UserErrorMessages.FormatException(ex, "initializing tabs");
+                _logger.LogError(logMessage);
+                MessageBox.Show(userMessage, "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -210,9 +221,19 @@ namespace PIDStandardization.UI
                 EquipmentDataGrid.ItemsSource = equipment;
                 StatusTextBlock.Text = $"Loaded {equipment.Count()} equipment item(s)";
             }
+            catch (SqlException sqlEx)
+            {
+                var userMessage = UserErrorMessages.GetDatabaseError(sqlEx);
+                _logger.LogError(sqlEx, "Error loading equipment for project {ProjectId}", projectId);
+                MessageBox.Show(userMessage, "Database Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                StatusTextBlock.Text = "Error loading equipment";
+            }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading equipment: {ex.Message}", "Error",
+                var (userMessage, logMessage, correlationId) = UserErrorMessages.FormatException(ex, "loading equipment");
+                _logger.LogError(logMessage);
+                MessageBox.Show(userMessage, "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 StatusTextBlock.Text = "Error loading equipment";
             }
@@ -295,9 +316,18 @@ namespace PIDStandardization.UI
                     await LoadEquipmentForProject(selectedEquipment.ProjectId);
                     StatusTextBlock.Text = $"Deleted equipment: {selectedEquipment.TagNumber}";
                 }
+                catch (SqlException sqlEx)
+                {
+                    var userMessage = UserErrorMessages.GetDatabaseError(sqlEx);
+                    _logger.LogError(sqlEx, "Error deleting equipment {TagNumber}", selectedEquipment.TagNumber);
+                    MessageBox.Show(userMessage, "Database Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error deleting equipment: {ex.Message}", "Error",
+                    var (userMessage, logMessage, correlationId) = UserErrorMessages.FormatException(ex, "deleting equipment");
+                    _logger.LogError(logMessage);
+                    MessageBox.Show(userMessage, "Error",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -331,9 +361,98 @@ namespace PIDStandardization.UI
                     MessageBox.Show($"Equipment list exported successfully!\n\nFile: {saveFileDialog.FileName}",
                         "Export Successful", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
+                catch (IOException ioEx)
+                {
+                    var userMessage = UserErrorMessages.GetFileAccessError(ioEx);
+                    _logger.LogError(ioEx, "Error exporting equipment to {FileName}", saveFileDialog.FileName);
+                    MessageBox.Show(userMessage, "File Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error exporting equipment: {ex.Message}", "Error",
+                    var (userMessage, logMessage, correlationId) = UserErrorMessages.FormatException(ex, "exporting equipment");
+                    _logger.LogError(logMessage);
+                    MessageBox.Show(userMessage, "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private async void ImportEquipment_Click(object sender, RoutedEventArgs e)
+        {
+            if (EquipmentProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                Title = "Import Equipment from Excel"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    StatusTextBlock.Text = "Importing equipment...";
+
+                    // Get existing tag numbers to prevent duplicates (optimized - only loads tag numbers)
+                    var existingTags = await _unitOfWork.Equipment.GetTagNumbersAsync(selectedProject.ProjectId);
+
+                    // Import from Excel
+                    var importService = new ExcelImportService();
+                    var result = importService.ImportEquipment(openFileDialog.FileName, selectedProject.ProjectId, existingTags);
+
+                    // Show results dialog
+                    ShowImportResultDialog("Equipment Import", result);
+
+                    // Refresh the grid
+                    await LoadEquipmentForProject(selectedProject.ProjectId);
+
+                    StatusTextBlock.Text = $"Import complete: {result.SuccessCount} added, {result.SkippedCount} skipped, {result.ErrorCount} errors";
+                }
+                catch (IOException ioEx)
+                {
+                    var userMessage = UserErrorMessages.GetFileAccessError(ioEx);
+                    _logger.LogError(ioEx, "Error importing equipment from {FileName}", openFileDialog.FileName);
+                    MessageBox.Show(userMessage, "File Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                catch (Exception ex)
+                {
+                    var userMessage = UserErrorMessages.GetImportError(openFileDialog.FileName, ex);
+                    _logger.LogError(ex, "Error importing equipment from {FileName}", openFileDialog.FileName);
+                    MessageBox.Show(userMessage, "Import Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void DownloadEquipmentTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                FileName = $"Equipment_Import_Template_{DateTime.Now:yyyyMMdd}.xlsx",
+                Title = "Download Equipment Template"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var importService = new ExcelImportService();
+                    importService.GenerateEquipmentTemplate(saveFileDialog.FileName);
+
+                    MessageBox.Show($"Template downloaded successfully!\n\nFile: {saveFileDialog.FileName}\n\nFill in the equipment data and use 'Import from Excel' to load it.",
+                        "Template Downloaded", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error downloading template: {ex.Message}", "Error",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -351,21 +470,29 @@ namespace PIDStandardization.UI
         {
             if (e.Source is TabControl)
             {
-                if (MainTabControl.SelectedIndex == 0) // Equipment tab
+                if (MainTabControl.SelectedIndex == 0) // Dashboard tab
+                {
+                    // Dashboard loads on project selection
+                }
+                else if (MainTabControl.SelectedIndex == 1) // Equipment tab
                 {
                     await LoadEquipmentProjectsAsync();
                 }
-                else if (MainTabControl.SelectedIndex == 1) // Lines tab
+                else if (MainTabControl.SelectedIndex == 2) // Lines tab
                 {
                     await LoadLinesProjectsAsync();
                 }
-                else if (MainTabControl.SelectedIndex == 2) // Instruments tab
+                else if (MainTabControl.SelectedIndex == 3) // Instruments tab
                 {
                     await LoadInstrumentsProjectsAsync();
                 }
-                else if (MainTabControl.SelectedIndex == 3) // Drawings tab
+                else if (MainTabControl.SelectedIndex == 4) // Drawings tab
                 {
                     await LoadDrawingsProjectsAsync();
+                }
+                else if (MainTabControl.SelectedIndex == 6) // Audit Log tab (after Validation)
+                {
+                    await LoadAuditLogProjectsAsync();
                 }
             }
         }
@@ -580,6 +707,82 @@ namespace PIDStandardization.UI
             }
         }
 
+        private async void ImportLines_Click(object sender, RoutedEventArgs e)
+        {
+            if (LinesProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                Title = "Import Lines from Excel"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    StatusTextBlock.Text = "Importing lines...";
+
+                    // Get existing line numbers (optimized - only loads line numbers)
+                    var existingLines = await _unitOfWork.Lines.FindAsync(l => l.ProjectId == selectedProject.ProjectId);
+                    var existingLineNumbers = existingLines.Select(l => l.LineNumber).ToList();
+
+                    // Get equipment mapping for From/To associations (optimized - only loads TagNumber and EquipmentId)
+                    var equipmentTagMap = await _unitOfWork.Equipment.GetTagToIdMappingAsync(selectedProject.ProjectId);
+
+                    // Import from Excel
+                    var importService = new ExcelImportService();
+                    var result = importService.ImportLines(openFileDialog.FileName, selectedProject.ProjectId,
+                        existingLineNumbers, equipmentTagMap);
+
+                    // Show results dialog
+                    ShowImportResultDialog("Lines Import", result);
+
+                    // Refresh the grid
+                    await LoadLinesForProject(selectedProject.ProjectId);
+
+                    StatusTextBlock.Text = $"Import complete: {result.SuccessCount} added, {result.SkippedCount} skipped, {result.ErrorCount} errors";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error importing lines: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void DownloadLinesTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                FileName = $"Lines_Import_Template_{DateTime.Now:yyyyMMdd}.xlsx",
+                Title = "Download Lines Template"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var importService = new ExcelImportService();
+                    importService.GenerateLinesTemplate(saveFileDialog.FileName);
+
+                    MessageBox.Show($"Template downloaded successfully!\n\nFile: {saveFileDialog.FileName}\n\nFill in the lines data and use 'Import from Excel' to load it.",
+                        "Template Downloaded", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error downloading template: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
         private async void RefreshLines_Click(object sender, RoutedEventArgs e)
         {
             if (LinesProjectComboBox.SelectedItem is Project project)
@@ -761,6 +964,86 @@ namespace PIDStandardization.UI
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Error exporting instruments: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private async void ImportInstruments_Click(object sender, RoutedEventArgs e)
+        {
+            if (InstrumentsProjectComboBox.SelectedItem is not Project selectedProject)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                Title = "Import Instruments from Excel"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    StatusTextBlock.Text = "Importing instruments...";
+
+                    // Get existing instrument tags
+                    var existingInstruments = await _unitOfWork.Instruments.FindAsync(i => i.ProjectId == selectedProject.ProjectId);
+                    var existingInstrumentTags = existingInstruments.Select(i => i.TagNumber).ToList();
+
+                    // Get equipment and line mappings
+                    var allEquipment = await _unitOfWork.Equipment.FindAsync(e => e.ProjectId == selectedProject.ProjectId);
+                    var equipmentTagMap = allEquipment.ToDictionary(e => e.TagNumber, e => e.EquipmentId);
+
+                    var allLines = await _unitOfWork.Lines.FindAsync(l => l.ProjectId == selectedProject.ProjectId);
+                    var lineNumberMap = allLines.ToDictionary(l => l.LineNumber, l => l.LineId);
+
+                    // Import from Excel
+                    var importService = new ExcelImportService();
+                    var result = importService.ImportInstruments(openFileDialog.FileName, selectedProject.ProjectId,
+                        existingInstrumentTags, equipmentTagMap, lineNumberMap);
+
+                    // Show results dialog
+                    ShowImportResultDialog("Instruments Import", result);
+
+                    // Refresh the grid
+                    await LoadInstrumentsForProject(selectedProject.ProjectId);
+
+                    StatusTextBlock.Text = $"Import complete: {result.SuccessCount} added, {result.SkippedCount} skipped, {result.ErrorCount} errors";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error importing instruments: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void DownloadInstrumentsTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                FileName = $"Instruments_Import_Template_{DateTime.Now:yyyyMMdd}.xlsx",
+                Title = "Download Instruments Template"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var importService = new ExcelImportService();
+                    importService.GenerateInstrumentsTemplate(saveFileDialog.FileName);
+
+                    MessageBox.Show($"Template downloaded successfully!\n\nFile: {saveFileDialog.FileName}\n\nFill in the instruments data and use 'Import from Excel' to load it.",
+                        "Template Downloaded", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error downloading template: {ex.Message}", "Error",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -1062,5 +1345,327 @@ namespace PIDStandardization.UI
                 await LoadDrawingsForProject(project.ProjectId);
             }
         }
+
+        // Import result dialog helper
+        private void ShowImportResultDialog(string title, ExcelImportService.ImportResult result)
+        {
+            var message = $"Import Summary:\n\n" +
+                         $"✓ Successfully imported: {result.SuccessCount}\n" +
+                         $"⊘ Skipped (duplicates): {result.SkippedCount}\n" +
+                         $"✗ Errors: {result.ErrorCount}\n";
+
+            if (result.Warnings.Any())
+            {
+                message += $"\n⚠ Warnings: {result.Warnings.Count}\n";
+                message += string.Join("\n", result.Warnings.Take(5));
+                if (result.Warnings.Count > 5)
+                    message += $"\n... and {result.Warnings.Count - 5} more warnings";
+            }
+
+            if (result.Errors.Any())
+            {
+                message += $"\n\nErrors:\n";
+                message += string.Join("\n", result.Errors.Take(5));
+                if (result.Errors.Count > 5)
+                    message += $"\n... and {result.Errors.Count - 5} more errors";
+            }
+
+            if (result.SkippedItems.Any())
+            {
+                message += $"\n\nSkipped Items:\n";
+                message += string.Join("\n", result.SkippedItems.Take(5));
+                if (result.SkippedItems.Count > 5)
+                    message += $"\n... and {result.SkippedItems.Count - 5} more";
+            }
+
+            var icon = result.ErrorCount > 0 ? MessageBoxImage.Warning :
+                       result.SuccessCount > 0 ? MessageBoxImage.Information :
+                       MessageBoxImage.Exclamation;
+
+            MessageBox.Show(message, title, MessageBoxButton.OK, icon);
+        }
+
+        #region Dashboard Methods
+
+        private async void DashboardProjectComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DashboardProjectComboBox.SelectedItem is Core.Entities.Project selectedProject)
+            {
+                DashboardProjectTaggingModeTextBlock.Text = $"Tagging Mode: {selectedProject.TaggingMode}";
+                await LoadDashboardData(selectedProject);
+            }
+        }
+
+        private async void RefreshDashboard_Click(object sender, RoutedEventArgs e)
+        {
+            if (DashboardProjectComboBox.SelectedItem is Core.Entities.Project selectedProject)
+            {
+                await LoadDashboardData(selectedProject);
+                MessageBox.Show("Dashboard refreshed successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private async Task LoadDashboardData(Core.Entities.Project project)
+        {
+            try
+            {
+                // Get all data for the project
+                var equipment = (await _unitOfWork.Equipment.FindAsync(e => e.ProjectId == project.ProjectId && e.IsActive)).ToList();
+                var lines = (await _unitOfWork.Lines.FindAsync(l => l.ProjectId == project.ProjectId && l.IsActive)).ToList();
+                var instruments = (await _unitOfWork.Instruments.FindAsync(i => i.ProjectId == project.ProjectId && i.IsActive)).ToList();
+
+                // Update statistics cards
+                TotalEquipmentTextBlock.Text = equipment.Count.ToString();
+                TotalEquipmentSubtitleTextBlock.Text = equipment.Count == 1 ? "item in project" : "items in project";
+
+                // Calculate tagged equipment (equipment with non-empty tag numbers)
+                int taggedCount = equipment.Count(e => !string.IsNullOrWhiteSpace(e.TagNumber));
+                TaggedEquipmentTextBlock.Text = taggedCount.ToString();
+                double taggedPercent = equipment.Count > 0 ? (double)taggedCount / equipment.Count * 100 : 0;
+                TaggedEquipmentPercentTextBlock.Text = $"{taggedPercent:F1}% complete";
+
+                TotalLinesTextBlock.Text = lines.Count.ToString();
+                TotalLinesSubtitleTextBlock.Text = lines.Count == 1 ? "process line" : "process lines";
+
+                TotalInstrumentsTextBlock.Text = instruments.Count.ToString();
+                TotalInstrumentsSubtitleTextBlock.Text = instruments.Count == 1 ? "instrument" : "instruments";
+
+                // Equipment by Type breakdown
+                var equipmentByType = equipment
+                    .GroupBy(e => string.IsNullOrEmpty(e.EquipmentType) ? "Unspecified" : e.EquipmentType)
+                    .Select(g => new
+                    {
+                        Type = g.Key,
+                        Count = g.Count(),
+                        Percentage = equipment.Count > 0 ? $"{(double)g.Count() / equipment.Count * 100:F1}%" : "0%"
+                    })
+                    .OrderByDescending(x => x.Count)
+                    .ToList();
+
+                EquipmentByTypeListView.ItemsSource = equipmentByType;
+
+                // Equipment by Status breakdown
+                var equipmentByStatus = equipment
+                    .GroupBy(e => e.Status.ToString())
+                    .Select(g => new
+                    {
+                        Status = g.Key,
+                        Count = g.Count(),
+                        Percentage = equipment.Count > 0 ? $"{(double)g.Count() / equipment.Count * 100:F1}%" : "0%"
+                    })
+                    .OrderByDescending(x => x.Count)
+                    .ToList();
+
+                EquipmentByStatusListView.ItemsSource = equipmentByStatus;
+
+                // Recent equipment (last 10)
+                var recentEquipment = equipment
+                    .OrderByDescending(e => e.CreatedDate)
+                    .Take(10)
+                    .ToList();
+
+                RecentEquipmentListView.ItemsSource = recentEquipment;
+
+                // Project information
+                var projectInfo = $"Project: {project.ProjectName}\n" +
+                                  $"Description: {project.Description}\n" +
+                                  $"Tagging Mode: {project.TaggingMode}\n" +
+                                  $"Created: {project.CreatedDate:yyyy-MM-dd}\n" +
+                                  $"Modified: {project.ModifiedDate:yyyy-MM-dd}";
+
+                DashboardProjectInfoTextBlock.Text = projectInfo;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading dashboard data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ManageDrawings_Click(object sender, RoutedEventArgs e)
+        {
+            // Switch to Drawings tab
+            MainTabControl.SelectedIndex = 4; // Assuming Drawings is the 5th tab (0-indexed)
+        }
+
+        private void RunValidation_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Validation feature will be implemented in a future update.",
+                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        #endregion
+
+        #region Tag Renumbering Methods
+
+        private void TagRenumberingWizard_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedProject == null)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            using var scope = _serviceProvider.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+            var dialog = new Views.TagRenumberingDialog(unitOfWork, _selectedProject);
+            dialog.Owner = this;
+
+            if (dialog.ShowDialog() == true)
+            {
+                StatusTextBlock.Text = "Tag renumbering completed successfully";
+
+                // Refresh equipment grid if on equipment tab
+                if (MainTabControl.SelectedIndex == 1 && EquipmentProjectComboBox.SelectedItem is Project project)
+                {
+                    _ = LoadEquipmentForProject(project.ProjectId);
+                }
+            }
+        }
+
+        private void HierarchicalView_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedProject == null)
+            {
+                MessageBox.Show("Please select a project first.", "No Project Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            using var scope = _serviceProvider.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+            var dialog = new Views.HierarchicalViewDialog(unitOfWork, _selectedProject);
+            dialog.Owner = this;
+            dialog.ShowDialog();
+        }
+
+        #endregion
+
+        #region Audit Log Methods
+
+        private bool _isLoadingAuditLogProjects = false;
+
+        private async Task LoadAuditLogProjectsAsync()
+        {
+            if (_isLoadingAuditLogProjects)
+                return;
+
+            _isLoadingAuditLogProjects = true;
+            try
+            {
+                var projects = await _unitOfWork.Projects.GetAllAsync();
+                AuditLogProjectComboBox.ItemsSource = projects;
+
+                // Select the last selected project
+                if (_lastSelectedProject != null && projects.Any(p => p.ProjectId == _lastSelectedProject.ProjectId))
+                {
+                    AuditLogProjectComboBox.SelectedItem = projects.First(p => p.ProjectId == _lastSelectedProject.ProjectId);
+                }
+                else if (projects.Any())
+                {
+                    AuditLogProjectComboBox.SelectedIndex = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading projects: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isLoadingAuditLogProjects = false;
+            }
+        }
+
+        private async void AuditLogProjectComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isInitializing) return;
+
+            if (AuditLogProjectComboBox.SelectedItem is Project project)
+            {
+                AuditLogProjectNameTextBlock.Text = $"Project: {project.ProjectName}";
+                await LoadAuditLogsForProject(project.ProjectId);
+            }
+        }
+
+        private async Task LoadAuditLogsForProject(Guid projectId)
+        {
+            try
+            {
+                // Get filter values
+                string? entityTypeFilter = (EntityTypeFilterComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
+                string? actionFilter = (ActionFilterComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
+                string? timeRangeFilter = (TimeRangeFilterComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
+
+                // Calculate date range
+                DateTime startDate = DateTime.MinValue;
+                if (timeRangeFilter == "24 Hours")
+                    startDate = DateTime.UtcNow.AddDays(-1);
+                else if (timeRangeFilter == "7 Days")
+                    startDate = DateTime.UtcNow.AddDays(-7);
+                else if (timeRangeFilter == "30 Days")
+                    startDate = DateTime.UtcNow.AddDays(-30);
+
+                // Get audit logs
+                IEnumerable<AuditLog> auditLogs;
+                if (timeRangeFilter == "All Time")
+                {
+                    auditLogs = await _unitOfWork.AuditLogs.FindAsync(a => a.ProjectId == projectId);
+                }
+                else
+                {
+                    auditLogs = await _unitOfWork.AuditLogs.FindAsync(a =>
+                        a.ProjectId == projectId && a.Timestamp >= startDate);
+                }
+
+                // Apply entity type filter
+                if (entityTypeFilter != "All" && !string.IsNullOrEmpty(entityTypeFilter))
+                {
+                    auditLogs = auditLogs.Where(a => a.EntityType == entityTypeFilter);
+                }
+
+                // Apply action filter
+                if (actionFilter != "All" && !string.IsNullOrEmpty(actionFilter))
+                {
+                    auditLogs = auditLogs.Where(a => a.Action == actionFilter);
+                }
+
+                // Sort by timestamp descending (most recent first)
+                var sortedLogs = auditLogs.OrderByDescending(a => a.Timestamp).ToList();
+
+                AuditLogDataGrid.ItemsSource = sortedLogs;
+                StatusTextBlock.Text = $"Loaded {sortedLogs.Count} audit log entries";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading audit logs: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                StatusTextBlock.Text = "Error loading audit logs";
+            }
+        }
+
+        private async void AuditLogFilter_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isInitializing || AuditLogProjectComboBox.SelectedItem is not Project project)
+                return;
+
+            await LoadAuditLogsForProject(project.ProjectId);
+        }
+
+        private async void RefreshAuditLog_Click(object sender, RoutedEventArgs e)
+        {
+            if (AuditLogProjectComboBox.SelectedItem is Project project)
+            {
+                await LoadAuditLogsForProject(project.ProjectId);
+            }
+        }
+
+        #endregion
     }
 }

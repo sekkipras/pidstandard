@@ -21,7 +21,19 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11">
       <Private>True</Private>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1">
+      <Private>True</Private>
+    </PackageReference>
     <PackageReference Include="Serilog" Version="4.3.0">
+      <Private>True</Private>
+    </PackageReference>
+    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0">
+      <Private>True</Private>
+    </PackageReference>
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0">
+      <Private>True</Private>
+    </PackageReference>
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0">
       <Private>True</Private>
     </PackageReference>
   </ItemGroup>

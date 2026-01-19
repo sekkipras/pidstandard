@@ -4,11 +4,18 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="FluentAssertions" Version="8.8.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="xUnit" Version="2.9.3" />
     <PackageReference Include="xUnit.runner.visualstudio" Version="3.1.5">
@@ -21,6 +28,11 @@
     <ProjectReference Include="..\PIDStandardization.Core\PIDStandardization.Core.csproj" />
     <ProjectReference Include="..\PIDStandardization.Data\PIDStandardization.Data.csproj" />
     <ProjectReference Include="..\PIDStandardization.Services\PIDStandardization.Services.csproj" />
+  </ItemGroup>
+
+  <!-- Reference UI helpers without full WPF dependency -->
+  <ItemGroup>
+    <Compile Include="..\PIDStandardization.UI\Helpers\UserErrorMessages.cs" Link="Helpers\UserErrorMessages.cs" />
   </ItemGroup>
 
 </Project>
