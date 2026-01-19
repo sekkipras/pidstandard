@@ -73,15 +73,23 @@ namespace PIDStandardization.UI.Views
 
         private async void LoadEquipmentAndLinesAsync()
         {
-            // Load equipment
-            var allEquipment = await _unitOfWork.Equipment
-                .FindAsync(e => e.ProjectId == _project.ProjectId && e.IsActive);
-            ParentEquipmentComboBox.ItemsSource = allEquipment;
+            try
+            {
+                // Load equipment
+                var allEquipment = await _unitOfWork.Equipment
+                    .FindAsync(e => e.ProjectId == _project.ProjectId && e.IsActive);
+                ParentEquipmentComboBox.ItemsSource = allEquipment;
 
-            // Load lines
-            var allLines = await _unitOfWork.Lines
-                .FindAsync(l => l.ProjectId == _project.ProjectId);
-            LineComboBox.ItemsSource = allLines;
+                // Load lines
+                var allLines = await _unitOfWork.Lines
+                    .FindAsync(l => l.ProjectId == _project.ProjectId);
+                LineComboBox.ItemsSource = allLines;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading equipment and lines: {ex.Message}\n\nYou can still add the instrument, but association dropdowns will be empty.",
+                    "Load Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void AssociationRadio_Checked(object sender, RoutedEventArgs e)
