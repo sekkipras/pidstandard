@@ -6,6 +6,7 @@ using PIDStandardization.Services;
 using PIDStandardization.Services.TaggingServices;
 using PIDStandardization.UI.Helpers;
 using PIDStandardization.UI.Views;
+using Serilog;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -895,6 +896,8 @@ namespace PIDStandardization.UI
 
         private async void AddInstrument_Click(object sender, RoutedEventArgs e)
         {
+            Log.Debug("AddInstrument_Click started");
+
             if (InstrumentsProjectComboBox.SelectedItem is not Project selectedProject)
             {
                 MessageBox.Show("Please select a project first.", "No Project Selected",
@@ -902,25 +905,48 @@ namespace PIDStandardization.UI
                 return;
             }
 
+            Log.Debug("Selected project: {ProjectName} ({ProjectId})", selectedProject.ProjectName, selectedProject.ProjectId);
+
             // Create scope but don't dispose until dialog is closed
+            Log.Debug("Creating service scope...");
             var scope = _serviceProvider.CreateScope();
+            Log.Debug("Service scope created");
+
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            Log.Debug("UnitOfWork obtained from scope");
 
             try
             {
+                Log.Debug("Creating InstrumentDialog...");
                 var dialog = new InstrumentDialog(unitOfWork, selectedProject);
+                Log.Debug("InstrumentDialog created, about to call ShowDialog()");
 
                 if (dialog.ShowDialog() == true)
                 {
+                    Log.Debug("Dialog returned with success");
                     await LoadInstrumentsForProject(selectedProject.ProjectId);
                     StatusTextBlock.Text = $"Added instrument: {dialog.SavedInstrument?.TagNumber}";
                 }
+                else
+                {
+                    Log.Debug("Dialog was cancelled or closed without saving");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Exception in AddInstrument_Click");
+                MessageBox.Show($"Error opening Add Instrument dialog: {ex.Message}\n\nStack trace: {ex.StackTrace}",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
                 // Dispose scope after dialog is completely closed
+                Log.Debug("Disposing service scope in finally block");
                 scope?.Dispose();
+                Log.Debug("Service scope disposed");
             }
+
+            Log.Debug("AddInstrument_Click completed");
         }
 
         private async void EditInstrument_Click(object sender, RoutedEventArgs e)

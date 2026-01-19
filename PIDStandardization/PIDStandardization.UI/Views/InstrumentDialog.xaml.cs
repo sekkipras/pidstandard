@@ -1,5 +1,6 @@
 using PIDStandardization.Core.Entities;
 using PIDStandardization.Core.Interfaces;
+using Serilog;
 using System.Windows;
 
 namespace PIDStandardization.UI.Views
@@ -19,6 +20,7 @@ namespace PIDStandardization.UI.Views
         // Constructor for Add mode
         public InstrumentDialog(IUnitOfWork unitOfWork, Project project)
         {
+            Log.Debug("InstrumentDialog constructor started - Add mode");
             InitializeComponent();
             _unitOfWork = unitOfWork;
             _project = project;
@@ -29,14 +31,27 @@ namespace PIDStandardization.UI.Views
 
             // Load equipment and lines list for association dropdowns after window is loaded
             Loaded += InstrumentDialog_Loaded;
+            Log.Debug("InstrumentDialog constructor completed - Loaded event handler attached");
         }
 
         private async void InstrumentDialog_Loaded(object sender, RoutedEventArgs e)
         {
+            Log.Debug("InstrumentDialog_Loaded event handler started");
             // Remove event handler to prevent multiple calls
             Loaded -= InstrumentDialog_Loaded;
 
-            await LoadEquipmentAndLinesAsync();
+            try
+            {
+                Log.Debug("Calling LoadEquipmentAndLinesAsync...");
+                await LoadEquipmentAndLinesAsync();
+                Log.Debug("LoadEquipmentAndLinesAsync completed successfully");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Exception in InstrumentDialog_Loaded");
+                MessageBox.Show($"Critical error during window load: {ex.Message}\n\nStack trace: {ex.StackTrace}",
+                    "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         // Constructor for Edit mode
@@ -83,18 +98,30 @@ namespace PIDStandardization.UI.Views
         {
             try
             {
+                Log.Debug("LoadEquipmentAndLinesAsync started - ProjectId: {ProjectId}", _project.ProjectId);
+
                 // Load equipment
+                Log.Debug("Loading equipment from database...");
                 var allEquipment = await _unitOfWork.Equipment
                     .FindAsync(e => e.ProjectId == _project.ProjectId && e.IsActive);
+                Log.Debug("Equipment loaded - Count: {EquipmentCount}", allEquipment?.Count() ?? 0);
+
                 ParentEquipmentComboBox.ItemsSource = allEquipment;
+                Log.Debug("Equipment bound to ComboBox");
 
                 // Load lines
+                Log.Debug("Loading lines from database...");
                 var allLines = await _unitOfWork.Lines
                     .FindAsync(l => l.ProjectId == _project.ProjectId);
+                Log.Debug("Lines loaded - Count: {LineCount}", allLines?.Count() ?? 0);
+
                 LineComboBox.ItemsSource = allLines;
+                Log.Debug("Lines bound to ComboBox");
+                Log.Debug("LoadEquipmentAndLinesAsync completed successfully");
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "Exception in LoadEquipmentAndLinesAsync");
                 MessageBox.Show($"Error loading equipment and lines: {ex.Message}\n\nYou can still add the instrument, but association dropdowns will be empty.",
                     "Load Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
