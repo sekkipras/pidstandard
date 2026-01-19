@@ -41,39 +41,46 @@ namespace PIDStandardization.UI
         {
             // Show project selection dialog at startup
             // Create a new scope to get a fresh UnitOfWork instance
-            using var scope = _serviceProvider.CreateScope();
+            var scope = _serviceProvider.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var projectSelectionDialog = new ProjectSelectionDialog(unitOfWork);
-            projectSelectionDialog.Owner = this;
-
-            if (projectSelectionDialog.ShowDialog() == true)
+            try
             {
-                _selectedProject = projectSelectionDialog.SelectedProject;
-                _lastSelectedProject = _selectedProject;
+                var projectSelectionDialog = new ProjectSelectionDialog(unitOfWork);
+                projectSelectionDialog.Owner = this;
 
-                // Update window title with selected project
-                if (_selectedProject != null)
+                if (projectSelectionDialog.ShowDialog() == true)
                 {
-                    Title = $"P&ID Standardization - {_selectedProject.ProjectName}";
-                    StatusTextBlock.Text = $"Selected project: {_selectedProject.ProjectName}";
+                    _selectedProject = projectSelectionDialog.SelectedProject;
+                    _lastSelectedProject = _selectedProject;
 
-                    // Pre-populate all tabs with selected project
-                    await InitializeTabsWithSelectedProject();
+                    // Update window title with selected project
+                    if (_selectedProject != null)
+                    {
+                        Title = $"P&ID Standardization - {_selectedProject.ProjectName}";
+                        StatusTextBlock.Text = $"Selected project: {_selectedProject.ProjectName}";
+
+                        // Pre-populate all tabs with selected project
+                        await InitializeTabsWithSelectedProject();
+                    }
+
+                    // Show welcome screen on first launch (after project selection)
+                    if (Properties.Settings.Default.ShowWelcomeScreen)
+                    {
+                        var welcomeDialog = new WelcomeDialog();
+                        welcomeDialog.Owner = this;
+                        welcomeDialog.ShowDialog();
+                    }
                 }
-
-                // Show welcome screen on first launch (after project selection)
-                if (Properties.Settings.Default.ShowWelcomeScreen)
+                else
                 {
-                    var welcomeDialog = new WelcomeDialog();
-                    welcomeDialog.Owner = this;
-                    welcomeDialog.ShowDialog();
+                    // User cancelled project selection - exit application
+                    Application.Current.Shutdown();
                 }
             }
-            else
+            finally
             {
-                // User cancelled project selection - exit application
-                Application.Current.Shutdown();
+                scope?.Dispose();
             }
         }
 
@@ -129,18 +136,25 @@ namespace PIDStandardization.UI
         {
             // Show project selection dialog
             // Create a new scope to get a fresh UnitOfWork instance
-            using var scope = _serviceProvider.CreateScope();
+            var scope = _serviceProvider.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var projectSelectionDialog = new ProjectSelectionDialog(unitOfWork);
-            projectSelectionDialog.Owner = this;
-
-            if (projectSelectionDialog.ShowDialog() == true && projectSelectionDialog.SelectedProject != null)
+            try
             {
-                _selectedProject = projectSelectionDialog.SelectedProject;
-                _lastSelectedProject = _selectedProject;
-                Title = $"P&ID Standardization - {_selectedProject.ProjectName}";
-                StatusTextBlock.Text = $"Switched to project: {_selectedProject.ProjectName}";
+                var projectSelectionDialog = new ProjectSelectionDialog(unitOfWork);
+                projectSelectionDialog.Owner = this;
+
+                if (projectSelectionDialog.ShowDialog() == true && projectSelectionDialog.SelectedProject != null)
+                {
+                    _selectedProject = projectSelectionDialog.SelectedProject;
+                    _lastSelectedProject = _selectedProject;
+                    Title = $"P&ID Standardization - {_selectedProject.ProjectName}";
+                    StatusTextBlock.Text = $"Switched to project: {_selectedProject.ProjectName}";
+                }
+            }
+            finally
+            {
+                scope?.Dispose();
             }
         }
 
@@ -248,16 +262,23 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            using var scope = _serviceProvider.CreateScope();
+            var scope = _serviceProvider.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var tagValidationService = scope.ServiceProvider.GetRequiredService<ITagValidationService>();
 
-            var dialog = new EquipmentDialog(unitOfWork, tagValidationService, selectedProject);
-
-            if (dialog.ShowDialog() == true)
+            try
             {
-                await LoadEquipmentForProject(selectedProject.ProjectId);
-                StatusTextBlock.Text = $"Added equipment: {dialog.SavedEquipment?.TagNumber}";
+                var dialog = new EquipmentDialog(unitOfWork, tagValidationService, selectedProject);
+
+                if (dialog.ShowDialog() == true)
+                {
+                    await LoadEquipmentForProject(selectedProject.ProjectId);
+                    StatusTextBlock.Text = $"Added equipment: {dialog.SavedEquipment?.TagNumber}";
+                }
+            }
+            finally
+            {
+                scope?.Dispose();
             }
         }
 
@@ -277,16 +298,23 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            using var scope = _serviceProvider.CreateScope();
+            var scope = _serviceProvider.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var tagValidationService = scope.ServiceProvider.GetRequiredService<ITagValidationService>();
 
-            var dialog = new EquipmentDialog(unitOfWork, tagValidationService, selectedProject, selectedEquipment);
-
-            if (dialog.ShowDialog() == true)
+            try
             {
-                await LoadEquipmentForProject(selectedProject.ProjectId);
-                StatusTextBlock.Text = $"Updated equipment: {selectedEquipment.TagNumber}";
+                var dialog = new EquipmentDialog(unitOfWork, tagValidationService, selectedProject, selectedEquipment);
+
+                if (dialog.ShowDialog() == true)
+                {
+                    await LoadEquipmentForProject(selectedProject.ProjectId);
+                    StatusTextBlock.Text = $"Updated equipment: {selectedEquipment.TagNumber}";
+                }
+            }
+            finally
+            {
+                scope?.Dispose();
             }
         }
 
@@ -598,15 +626,22 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            using var scope = _serviceProvider.CreateScope();
+            var scope = _serviceProvider.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var dialog = new LineDialog(unitOfWork, selectedProject);
-
-            if (dialog.ShowDialog() == true)
+            try
             {
-                await LoadLinesForProject(selectedProject.ProjectId);
-                StatusTextBlock.Text = $"Added line: {dialog.SavedLine?.LineNumber}";
+                var dialog = new LineDialog(unitOfWork, selectedProject);
+
+                if (dialog.ShowDialog() == true)
+                {
+                    await LoadLinesForProject(selectedProject.ProjectId);
+                    StatusTextBlock.Text = $"Added line: {dialog.SavedLine?.LineNumber}";
+                }
+            }
+            finally
+            {
+                scope?.Dispose();
             }
         }
 
@@ -626,15 +661,22 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            using var scope = _serviceProvider.CreateScope();
+            var scope = _serviceProvider.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var dialog = new LineDialog(unitOfWork, selectedProject, selectedLine);
-
-            if (dialog.ShowDialog() == true)
+            try
             {
-                await LoadLinesForProject(selectedProject.ProjectId);
-                StatusTextBlock.Text = $"Updated line: {selectedLine.LineNumber}";
+                var dialog = new LineDialog(unitOfWork, selectedProject, selectedLine);
+
+                if (dialog.ShowDialog() == true)
+                {
+                    await LoadLinesForProject(selectedProject.ProjectId);
+                    StatusTextBlock.Text = $"Updated line: {selectedLine.LineNumber}";
+                }
+            }
+            finally
+            {
+                scope?.Dispose();
             }
         }
 
@@ -1528,21 +1570,28 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            using var scope = _serviceProvider.CreateScope();
+            var scope = _serviceProvider.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var dialog = new Views.TagRenumberingDialog(unitOfWork, _selectedProject);
-            dialog.Owner = this;
-
-            if (dialog.ShowDialog() == true)
+            try
             {
-                StatusTextBlock.Text = "Tag renumbering completed successfully";
+                var dialog = new Views.TagRenumberingDialog(unitOfWork, _selectedProject);
+                dialog.Owner = this;
 
-                // Refresh equipment grid if on equipment tab
-                if (MainTabControl.SelectedIndex == 1 && EquipmentProjectComboBox.SelectedItem is Project project)
+                if (dialog.ShowDialog() == true)
                 {
-                    _ = LoadEquipmentForProject(project.ProjectId);
+                    StatusTextBlock.Text = "Tag renumbering completed successfully";
+
+                    // Refresh equipment grid if on equipment tab
+                    if (MainTabControl.SelectedIndex == 1 && EquipmentProjectComboBox.SelectedItem is Project project)
+                    {
+                        _ = LoadEquipmentForProject(project.ProjectId);
+                    }
                 }
+            }
+            finally
+            {
+                scope?.Dispose();
             }
         }
 
@@ -1555,12 +1604,19 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            using var scope = _serviceProvider.CreateScope();
+            var scope = _serviceProvider.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var dialog = new Views.HierarchicalViewDialog(unitOfWork, _selectedProject);
-            dialog.Owner = this;
-            dialog.ShowDialog();
+            try
+            {
+                var dialog = new Views.HierarchicalViewDialog(unitOfWork, _selectedProject);
+                dialog.Owner = this;
+                dialog.ShowDialog();
+            }
+            finally
+            {
+                scope?.Dispose();
+            }
         }
 
         #endregion
