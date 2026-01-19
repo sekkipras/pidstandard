@@ -309,8 +309,11 @@ namespace PIDStandardization.UI
 
                 if (dialog.ShowDialog() == true)
                 {
-                    await LoadEquipmentForProject(selectedProject.ProjectId);
-                    StatusTextBlock.Text = $"Updated equipment: {selectedEquipment.TagNumber}";
+                    // Reload equipment list from database BEFORE disposing the scope
+                    // This ensures we get fresh data from the DbContext that was just saved to
+                    var equipment = await unitOfWork.Equipment.FindAsync(e => e.ProjectId == selectedProject.ProjectId);
+                    EquipmentDataGrid.ItemsSource = equipment;
+                    StatusTextBlock.Text = $"Updated equipment: {selectedEquipment.TagNumber}. Loaded {equipment.Count()} equipment item(s)";
                 }
             }
             finally
