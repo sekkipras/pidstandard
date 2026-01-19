@@ -1,5 +1,17 @@
 # User Guide and Testing Checklist
 
+## What is PID Standardization?
+
+**PID Standardization** is an integrated software solution designed to streamline the management and standardization of Process & Instrumentation Diagrams (P&IDs) in engineering projects. The system bridges the gap between AutoCAD drawings and structured database management, enabling engineers to extract equipment data from P&ID drawings, standardize tag numbering, synchronize changes bidirectionally between drawings and database, and maintain comprehensive audit trails of all modifications.
+
+The solution consists of two main components:
+1. **WPF Desktop Application** - A Windows application for managing projects, equipment, lines, instruments, and drawings with features like hierarchical visualization, tag renumbering wizards, audit logging, and Excel import/export capabilities.
+2. **AutoCAD Plugin** - A .NET plugin that integrates directly into AutoCAD 2026, providing commands to extract equipment from drawings, assign tags, and synchronize data bidirectionally with the database.
+
+Together, these components enable engineering teams to maintain consistency across P&ID documentation, enforce standardized tagging conventions, track all changes for compliance and audit purposes, and collaborate efficiently across multiple drawings and team members.
+
+---
+
 ## Quick Start Guide
 
 This guide will walk you through testing each new feature implemented in the latest release. Follow the checklist to ensure everything works correctly in your environment.
@@ -7,6 +19,13 @@ This guide will walk you through testing each new feature implemented in the lat
 ---
 
 ## Pre-Testing Setup
+
+**IMPORTANT:** This setup is required **ONLY** in the following scenarios:
+- **First-time installation** on a new computer
+- **After pulling updates** from GitHub that include database schema changes (migrations)
+- **When the database needs to be recreated** or reset
+
+Once completed, you do NOT need to repeat this setup every time you use the application. Simply launch the WPF application or load the AutoCAD plugin as normal.
 
 ### 1. Database Migration ✓
 
@@ -41,6 +60,27 @@ dotnet build PIDStandardization.sln
 - [ ] No warnings about missing references
 - [ ] AutoCAD plugin DLL generated
 - [ ] WPF application executable created
+
+---
+
+## Daily Usage (After Setup Complete)
+
+Once the pre-testing setup is complete, you can use the application normally without repeating those steps:
+
+### Starting the WPF Application
+1. Navigate to: `PIDStandardization.UI/bin/Debug/net8.0-windows/`
+2. Run: `PIDStandardization.UI.exe`
+3. The application connects to the database automatically
+4. Select your project and start working
+
+### Loading the AutoCAD Plugin
+1. Open AutoCAD 2026
+2. Type command: `NETLOAD`
+3. Browse to: `PIDStandardization.AutoCAD/bin/Debug/net8.0-windows/PIDStandardization.AutoCAD.dll`
+4. Click "Load"
+5. Plugin commands are now available (PIDINFO, PIDEXTRACT, PIDTAG, PIDSYNC, etc.)
+
+**Tip:** You can set up AutoCAD to auto-load the plugin on startup by adding it to the Startup Suite.
 
 ---
 
