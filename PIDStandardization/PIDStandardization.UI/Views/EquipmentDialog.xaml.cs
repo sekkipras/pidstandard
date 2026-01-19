@@ -2,6 +2,7 @@ using PIDStandardization.Core.Entities;
 using PIDStandardization.Core.Enums;
 using PIDStandardization.Core.Interfaces;
 using PIDStandardization.Services.TaggingServices;
+using Serilog;
 using System.Windows;
 
 namespace PIDStandardization.UI.Views
@@ -57,6 +58,9 @@ namespace PIDStandardization.UI.Views
 
         private void LoadEquipmentData(Equipment equipment)
         {
+            Log.Debug("LoadEquipmentData - Loading equipment {TagNumber}, Status from DB: {Status}",
+                equipment.TagNumber, equipment.Status);
+
             TagNumberTextBox.Text = equipment.TagNumber;
             EquipmentTypeComboBox.Text = equipment.EquipmentType;
             DescriptionTextBox.Text = equipment.Description;
@@ -64,7 +68,7 @@ namespace PIDStandardization.UI.Views
             AreaTextBox.Text = equipment.Area;
 
             // Set status
-            StatusComboBox.SelectedIndex = equipment.Status switch
+            var selectedIndex = equipment.Status switch
             {
                 EquipmentStatus.Planned => 0,
                 EquipmentStatus.Installed => 1,
@@ -72,6 +76,14 @@ namespace PIDStandardization.UI.Views
                 EquipmentStatus.Decommissioned => 3,
                 _ => 0
             };
+
+            Log.Debug("LoadEquipmentData - Setting StatusComboBox.SelectedIndex to {Index} for Status {Status}",
+                selectedIndex, equipment.Status);
+
+            StatusComboBox.SelectedIndex = selectedIndex;
+
+            Log.Debug("LoadEquipmentData - StatusComboBox.SelectedIndex is now {Index}",
+                StatusComboBox.SelectedIndex);
 
             ManufacturerTextBox.Text = equipment.Manufacturer;
             ModelTextBox.Text = equipment.Model;
@@ -246,6 +258,9 @@ namespace PIDStandardization.UI.Views
                         return;
                     }
 
+                    Log.Debug("Edit mode - Equipment loaded. Current Status: {CurrentStatus}, UI Status ComboBox SelectedIndex: {SelectedIndex}, New Status: {NewStatus}",
+                        equipment.Status, StatusComboBox.SelectedIndex, status);
+
                     // Update existing equipment
                     equipment.TagNumber = TagNumberTextBox.Text.Trim();
                     equipment.EquipmentType = EquipmentTypeComboBox.Text;
@@ -255,6 +270,8 @@ namespace PIDStandardization.UI.Views
                     equipment.Status = status;
                     equipment.Manufacturer = ManufacturerTextBox.Text;
                     equipment.Model = ModelTextBox.Text;
+
+                    Log.Debug("After assignment - Equipment.Status is now: {Status}", equipment.Status);
 
                     // Connectivity
                     equipment.UpstreamEquipmentId = (Guid?)UpstreamEquipmentComboBox.SelectedValue;
