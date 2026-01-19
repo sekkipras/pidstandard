@@ -9,7 +9,8 @@ namespace PIDStandardization.Services.TaggingServices
         /// <summary>
         /// Validates a tag number based on project's tagging mode
         /// </summary>
-        Task<TagValidationResult> ValidateTagAsync(Guid projectId, string tagNumber);
+        /// <param name="excludeEquipmentId">Optional equipment ID to exclude from uniqueness check (for edit mode)</param>
+        Task<TagValidationResult> ValidateTagAsync(Guid projectId, string tagNumber, Guid? excludeEquipmentId = null);
 
         /// <summary>
         /// Checks if a tag is unique within the project

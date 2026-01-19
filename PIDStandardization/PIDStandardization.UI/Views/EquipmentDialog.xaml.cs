@@ -35,6 +35,9 @@ namespace PIDStandardization.UI.Views
             // Update title based on tagging mode
             Title = $"Add Equipment - {project.TaggingMode} Tagging Mode";
 
+            // Set default status for new equipment
+            StatusComboBox.SelectedIndex = 0; // Planned
+
             // Load equipment list for connectivity dropdown
             Loaded += async (s, e) => await LoadEquipmentListAsync();
         }
@@ -202,8 +205,9 @@ namespace PIDStandardization.UI.Views
 
             try
             {
-                // Validate tag format
-                var validationResult = await _tagValidationService.ValidateTagAsync(_project.ProjectId, TagNumberTextBox.Text.Trim());
+                // Validate tag format (exclude current equipment ID in edit mode)
+                var excludeId = _isEditMode && _existingEquipment != null ? _existingEquipment.EquipmentId : (Guid?)null;
+                var validationResult = await _tagValidationService.ValidateTagAsync(_project.ProjectId, TagNumberTextBox.Text.Trim(), excludeId);
 
                 if (!validationResult.IsValid)
                 {

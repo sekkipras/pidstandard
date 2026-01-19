@@ -70,7 +70,7 @@
 
                 <!-- Status -->
                 <TextBlock Text="Status:" Margin="0,5"/>
-                <ComboBox Name="StatusComboBox" Height="25" Margin="0,5" SelectedIndex="0">
+                <ComboBox Name="StatusComboBox" Height="25" Margin="0,5">
                     <ComboBoxItem Content="Planned"/>
                     <ComboBoxItem Content="Installed"/>
                     <ComboBoxItem Content="Commissioned"/>

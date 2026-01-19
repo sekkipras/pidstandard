@@ -15,7 +15,7 @@ namespace PIDStandardization.Services.TaggingServices
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<TagValidationResult> ValidateTagAsync(Guid projectId, string tagNumber)
+        public async Task<TagValidationResult> ValidateTagAsync(Guid projectId, string tagNumber, Guid? excludeEquipmentId = null)
         {
             var result = new TagValidationResult();
 
@@ -45,8 +45,8 @@ namespace PIDStandardization.Services.TaggingServices
                 result.FormatCompliant = ValidateKKSFormat(tagNumber, result);
             }
 
-            // Check uniqueness
-            result.IsUnique = await IsTagUniqueAsync(projectId, tagNumber);
+            // Check uniqueness (exclude current equipment ID in edit mode)
+            result.IsUnique = await IsTagUniqueAsync(projectId, tagNumber, excludeEquipmentId);
             if (!result.IsUnique)
             {
                 result.Errors.Add($"Tag '{tagNumber}' already exists in this project");
