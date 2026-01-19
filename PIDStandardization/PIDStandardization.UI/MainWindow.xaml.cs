@@ -1415,8 +1415,8 @@ namespace PIDStandardization.UI
             {
                 // Get all data for the project
                 var equipment = (await _unitOfWork.Equipment.FindAsync(e => e.ProjectId == project.ProjectId && e.IsActive)).ToList();
-                var lines = (await _unitOfWork.Lines.FindAsync(l => l.ProjectId == project.ProjectId && l.IsActive)).ToList();
-                var instruments = (await _unitOfWork.Instruments.FindAsync(i => i.ProjectId == project.ProjectId && i.IsActive)).ToList();
+                var lines = (await _unitOfWork.Lines.FindAsync(l => l.ProjectId == project.ProjectId)).ToList();
+                var instruments = (await _unitOfWork.Instruments.FindAsync(i => i.ProjectId == project.ProjectId)).ToList();
 
                 // Update statistics cards
                 TotalEquipmentTextBlock.Text = equipment.Count.ToString();
@@ -1472,10 +1472,10 @@ namespace PIDStandardization.UI
 
                 // Project information
                 var projectInfo = $"Project: {project.ProjectName}\n" +
-                                  $"Description: {project.Description}\n" +
+                                  $"Project Number: {project.ProjectNumber ?? "N/A"}\n" +
                                   $"Tagging Mode: {project.TaggingMode}\n" +
                                   $"Created: {project.CreatedDate:yyyy-MM-dd}\n" +
-                                  $"Modified: {project.ModifiedDate:yyyy-MM-dd}";
+                                  $"Modified: {project.ModifiedDate?.ToString("yyyy-MM-dd") ?? "N/A"}";
 
                 DashboardProjectInfoTextBlock.Text = projectInfo;
             }

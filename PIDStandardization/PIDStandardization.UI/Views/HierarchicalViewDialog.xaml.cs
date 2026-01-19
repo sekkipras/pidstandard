@@ -42,11 +42,11 @@ namespace PIDStandardization.UI.Views
                     .OrderBy(eq => eq.TagNumber)
                     .ToList();
 
-                _allLines = (await _unitOfWork.Lines.FindAsync(l => l.ProjectId == _project.ProjectId && l.IsActive))
+                _allLines = (await _unitOfWork.Lines.FindAsync(l => l.ProjectId == _project.ProjectId))
                     .OrderBy(l => l.LineNumber)
                     .ToList();
 
-                _allInstruments = (await _unitOfWork.Instruments.FindAsync(i => i.ProjectId == _project.ProjectId && i.IsActive))
+                _allInstruments = (await _unitOfWork.Instruments.FindAsync(i => i.ProjectId == _project.ProjectId))
                     .OrderBy(i => i.TagNumber)
                     .ToList();
 
