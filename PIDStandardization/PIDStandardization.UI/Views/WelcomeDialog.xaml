@@ -75,10 +75,10 @@
                         <StackPanel>
                             <TextBlock FontWeight="Bold" FontSize="14" Margin="0,0,0,5">
                                 <Run Text="4. " Foreground="#2196F3" FontSize="16"/>
-                                <Run Text="Review and Validate Tags"/>
+                                <Run Text="Tag Equipment (Optional)"/>
                             </TextBlock>
                             <TextBlock TextWrapping="Wrap" Foreground="#666">
-                                Go to the Equipment tab to review extracted equipment. Add or edit equipment details, descriptions, and specifications.
+                                In AutoCAD, use PIDTAG to tag individual blocks or use the Tag Renumbering Wizard in the WPF app to standardize tags in bulk with custom patterns.
                             </TextBlock>
                         </StackPanel>
                     </Border>
@@ -88,10 +88,23 @@
                         <StackPanel>
                             <TextBlock FontWeight="Bold" FontSize="14" Margin="0,0,0,5">
                                 <Run Text="5. " Foreground="#2196F3" FontSize="16"/>
-                                <Run Text="Export to Excel"/>
+                                <Run Text="Synchronize Changes"/>
                             </TextBlock>
                             <TextBlock TextWrapping="Wrap" Foreground="#666">
-                                Use the "Export to Excel" button to generate equipment lists, valve lists, and instrument lists for your project.
+                                Use PIDSYNC in AutoCAD to keep your drawings and database in sync. Supports bidirectional synchronization: drawing to database, database to drawing, or both.
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Step 6 -->
+                    <Border Background="#F5F5F5" Padding="15" Margin="0,0,0,10" CornerRadius="5">
+                        <StackPanel>
+                            <TextBlock FontWeight="Bold" FontSize="14" Margin="0,0,0,5">
+                                <Run Text="6. " Foreground="#2196F3" FontSize="16"/>
+                                <Run Text="Review and Export"/>
+                            </TextBlock>
+                            <TextBlock TextWrapping="Wrap" Foreground="#666">
+                                Use Equipment → Hierarchical View to visualize relationships. Review changes in the Audit Log. Export equipment lists, line lists, and instrument lists to Excel.
                             </TextBlock>
                         </StackPanel>
                     </Border>
@@ -104,16 +117,25 @@
                         • <Run FontWeight="SemiBold">Dual Tagging Modes:</Run> Support for Custom and KKS (DIN 40719) tagging standards
                     </TextBlock>
                     <TextBlock TextWrapping="Wrap" Margin="0,3">
-                        • <Run FontWeight="SemiBold">AutoCAD Integration:</Run> Extract equipment directly from P&amp;ID drawings
+                        • <Run FontWeight="SemiBold">AutoCAD Integration:</Run> Extract, tag, and sync equipment directly from P&amp;ID drawings
                     </TextBlock>
                     <TextBlock TextWrapping="Wrap" Margin="0,3">
-                        • <Run FontWeight="SemiBold">Smart Block Learning:</Run> System learns equipment types from AutoCAD block names
+                        • <Run FontWeight="SemiBold">Bidirectional Sync:</Run> PIDSYNC command keeps drawings and database perfectly synchronized
                     </TextBlock>
                     <TextBlock TextWrapping="Wrap" Margin="0,3">
-                        • <Run FontWeight="SemiBold">Excel Import/Export:</Run> Seamless data exchange with Excel spreadsheets
+                        • <Run FontWeight="SemiBold">Tag Renumbering Wizard:</Run> Standardize equipment tags in bulk with custom patterns and sequencing
                     </TextBlock>
                     <TextBlock TextWrapping="Wrap" Margin="0,3">
-                        • <Run FontWeight="SemiBold">Version Control:</Run> Track drawing versions and equipment changes
+                        • <Run FontWeight="SemiBold">Hierarchical View:</Run> Visualize equipment relationships by area, type, process flow, or drawing
+                    </TextBlock>
+                    <TextBlock TextWrapping="Wrap" Margin="0,3">
+                        • <Run FontWeight="SemiBold">Comprehensive Audit Trail:</Run> Track all changes with user, timestamp, and detailed change information
+                    </TextBlock>
+                    <TextBlock TextWrapping="Wrap" Margin="0,3">
+                        • <Run FontWeight="SemiBold">Excel Import/Export:</Run> Seamless data exchange with Excel spreadsheets for equipment, lines, and instruments
+                    </TextBlock>
+                    <TextBlock TextWrapping="Wrap" Margin="0,3">
+                        • <Run FontWeight="SemiBold">Smart Validation:</Run> Real-time tag format validation and duplicate detection
                     </TextBlock>
                 </StackPanel>
             </StackPanel>
