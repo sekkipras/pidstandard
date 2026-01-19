@@ -71,6 +71,10 @@ namespace PIDStandardization.AutoCAD
         public void Terminate()
         {
             Log.Information("PID Standardization AutoCAD Plugin unloading");
+
+            // Dispose database service
+            Services.DatabaseService.DisposeStatic();
+
             Log.CloseAndFlush();
         }
     }

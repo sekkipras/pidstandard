@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using Microsoft.Data.SqlClient;
 using PIDStandardization.AutoCAD.Services;
+using PIDStandardization.Core.Configuration;
 using Serilog;
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
@@ -31,7 +32,7 @@ namespace PIDStandardization.AutoCAD.Commands
                 ed.WriteMessage("\n=== P&ID Equipment Tagging ===");
 
                 // Get projects from database
-                var unitOfWork = Services.DatabaseService.GetUnitOfWork();
+                var unitOfWork = Services.DatabaseService.Instance.GetUnitOfWork();
                 var projects = await unitOfWork.Projects.GetAllAsync();
 
                 if (!projects.Any())
@@ -247,7 +248,7 @@ namespace PIDStandardization.AutoCAD.Commands
                 ed.WriteMessage("\n=== P&ID Batch Equipment Tagging ===");
 
                 // Get projects from database
-                var unitOfWork = Services.DatabaseService.GetUnitOfWork();
+                var unitOfWork = Services.DatabaseService.Instance.GetUnitOfWork();
                 var projects = await unitOfWork.Projects.GetAllAsync();
 
                 if (!projects.Any())
@@ -473,26 +474,8 @@ namespace PIDStandardization.AutoCAD.Commands
 
         private string GetEquipmentTypeFromBlockName(string blockName)
         {
-            string upperBlock = blockName.ToUpper();
-
-            if (upperBlock.Contains("PUMP") || upperBlock.Contains("PMP") || upperBlock.StartsWith("P-"))
-                return "Pump";
-            if (upperBlock.Contains("VALVE") || upperBlock.Contains("VLV") || upperBlock.StartsWith("V-"))
-                return "Valve";
-            if (upperBlock.Contains("TANK") || upperBlock.StartsWith("TK") || upperBlock.StartsWith("T-"))
-                return "Tank";
-            if (upperBlock.Contains("VESSEL") || upperBlock.Contains("VSL") || upperBlock.StartsWith("VS"))
-                return "Vessel";
-            if (upperBlock.Contains("HX") || upperBlock.Contains("HEAT") || upperBlock.Contains("EXCHANGER"))
-                return "Heat Exchanger";
-            if (upperBlock.Contains("FILTER") || upperBlock.Contains("FLT") || upperBlock.StartsWith("F-"))
-                return "Filter";
-            if (upperBlock.Contains("COMPRESSOR") || upperBlock.Contains("COMP") || upperBlock.StartsWith("C-"))
-                return "Compressor";
-            if (upperBlock.Contains("SEPARATOR") || upperBlock.Contains("SEP") || upperBlock.StartsWith("S-"))
-                return "Separator";
-
-            return "Equipment";
+            // Use ConfigurationService for pattern-based equipment type detection
+            return ConfigurationService.Instance.GetEquipmentType(blockName);
         }
 
         /// <summary>
@@ -554,7 +537,7 @@ namespace PIDStandardization.AutoCAD.Commands
                 ed.WriteMessage("\n=== P&ID Equipment Extraction to Database ===");
 
                 // Get projects from database
-                var unitOfWork = Services.DatabaseService.GetUnitOfWork();
+                var unitOfWork = Services.DatabaseService.Instance.GetUnitOfWork();
                 var projects = await unitOfWork.Projects.GetAllAsync();
 
                 if (!projects.Any())
@@ -869,7 +852,7 @@ namespace PIDStandardization.AutoCAD.Commands
                 ed.WriteMessage("\n=== Bidirectional Synchronization ===");
 
                 // Get projects from database
-                var unitOfWork = Services.DatabaseService.GetUnitOfWork();
+                var unitOfWork = Services.DatabaseService.Instance.GetUnitOfWork();
                 var projects = await unitOfWork.Projects.GetAllAsync();
 
                 if (!projects.Any())
