@@ -860,15 +860,24 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            using var scope = _serviceProvider.CreateScope();
+            // Create scope but don't dispose until dialog is closed
+            var scope = _serviceProvider.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var dialog = new InstrumentDialog(unitOfWork, selectedProject);
-
-            if (dialog.ShowDialog() == true)
+            try
             {
-                await LoadInstrumentsForProject(selectedProject.ProjectId);
-                StatusTextBlock.Text = $"Added instrument: {dialog.SavedInstrument?.TagNumber}";
+                var dialog = new InstrumentDialog(unitOfWork, selectedProject);
+
+                if (dialog.ShowDialog() == true)
+                {
+                    await LoadInstrumentsForProject(selectedProject.ProjectId);
+                    StatusTextBlock.Text = $"Added instrument: {dialog.SavedInstrument?.TagNumber}";
+                }
+            }
+            finally
+            {
+                // Dispose scope after dialog is completely closed
+                scope?.Dispose();
             }
         }
 
@@ -888,15 +897,24 @@ namespace PIDStandardization.UI
                 return;
             }
 
-            using var scope = _serviceProvider.CreateScope();
+            // Create scope but don't dispose until dialog is closed
+            var scope = _serviceProvider.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var dialog = new InstrumentDialog(unitOfWork, selectedProject, selectedInstrument);
-
-            if (dialog.ShowDialog() == true)
+            try
             {
-                await LoadInstrumentsForProject(selectedProject.ProjectId);
-                StatusTextBlock.Text = $"Updated instrument: {selectedInstrument.TagNumber}";
+                var dialog = new InstrumentDialog(unitOfWork, selectedProject, selectedInstrument);
+
+                if (dialog.ShowDialog() == true)
+                {
+                    await LoadInstrumentsForProject(selectedProject.ProjectId);
+                    StatusTextBlock.Text = $"Updated instrument: {selectedInstrument.TagNumber}";
+                }
+            }
+            finally
+            {
+                // Dispose scope after dialog is completely closed
+                scope?.Dispose();
             }
         }
 
