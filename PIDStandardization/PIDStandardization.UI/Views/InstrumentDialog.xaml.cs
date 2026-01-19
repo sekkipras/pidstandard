@@ -129,6 +129,10 @@ namespace PIDStandardization.UI.Views
 
         private void AssociationRadio_Checked(object sender, RoutedEventArgs e)
         {
+            // Skip if called during initialization before ComboBoxes are created
+            if (ParentEquipmentComboBox == null || LineComboBox == null)
+                return;
+
             // Enable/disable combo boxes based on radio button selection
             if (AssociateWithEquipmentRadio.IsChecked == true)
             {
