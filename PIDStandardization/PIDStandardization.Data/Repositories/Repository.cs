@@ -68,6 +68,22 @@ namespace PIDStandardization.Data.Repositories
             }
         }
 
+        public async Task<IEnumerable<T>> FindAsNoTrackingAsync(Expression<Func<T, bool>> predicate)
+        {
+            try
+            {
+                Log.Debug("Finding {EntityType} entities with predicate (no tracking)", _entityTypeName);
+                var result = await _dbSet.AsNoTracking().Where(predicate).ToListAsync();
+                Log.Debug("Found {Count} {EntityType} entities matching predicate (no tracking)", result.Count, _entityTypeName);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error finding {EntityType} entities with predicate (no tracking)", _entityTypeName);
+                throw;
+            }
+        }
+
         public async Task<T> AddAsync(T entity)
         {
             try

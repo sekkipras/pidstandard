@@ -232,7 +232,8 @@ namespace PIDStandardization.UI
         {
             try
             {
-                var equipment = await _unitOfWork.Equipment.FindAsync(e => e.ProjectId == projectId);
+                // Use AsNoTracking to ensure fresh data from database (bypasses EF cache)
+                var equipment = await _unitOfWork.Equipment.FindAsNoTrackingAsync(e => e.ProjectId == projectId);
                 EquipmentDataGrid.ItemsSource = equipment;
                 StatusTextBlock.Text = $"Loaded {equipment.Count()} equipment item(s)";
             }
@@ -609,7 +610,8 @@ namespace PIDStandardization.UI
         {
             try
             {
-                var lines = await _unitOfWork.Lines.FindAsync(l => l.ProjectId == projectId);
+                // Use AsNoTracking to ensure fresh data from database (bypasses EF cache)
+                var lines = await _unitOfWork.Lines.FindAsNoTrackingAsync(l => l.ProjectId == projectId);
                 LinesDataGrid.ItemsSource = lines;
                 StatusTextBlock.Text = $"Loaded {lines.Count()} line(s)";
             }
@@ -885,7 +887,8 @@ namespace PIDStandardization.UI
         {
             try
             {
-                var instruments = await _unitOfWork.Instruments.FindAsync(i => i.ProjectId == projectId);
+                // Use AsNoTracking to ensure fresh data from database (bypasses EF cache)
+                var instruments = await _unitOfWork.Instruments.FindAsNoTrackingAsync(i => i.ProjectId == projectId);
                 InstrumentsDataGrid.ItemsSource = instruments;
                 StatusTextBlock.Text = $"Loaded {instruments.Count()} instrument(s)";
             }
@@ -1196,7 +1199,8 @@ namespace PIDStandardization.UI
         {
             try
             {
-                var drawings = await _unitOfWork.Drawings.FindAsync(d => d.ProjectId == projectId);
+                // Use AsNoTracking to ensure fresh data from database (bypasses EF cache)
+                var drawings = await _unitOfWork.Drawings.FindAsNoTrackingAsync(d => d.ProjectId == projectId);
                 DrawingsDataGrid.ItemsSource = drawings;
                 StatusTextBlock.Text = $"Loaded {drawings.Count()} drawing(s)";
             }
@@ -1715,15 +1719,15 @@ namespace PIDStandardization.UI
                 else if (timeRangeFilter == "30 Days")
                     startDate = DateTime.UtcNow.AddDays(-30);
 
-                // Get audit logs
+                // Get audit logs - Use AsNoTracking to ensure fresh data from database (bypasses EF cache)
                 IEnumerable<AuditLog> auditLogs;
                 if (timeRangeFilter == "All Time")
                 {
-                    auditLogs = await _unitOfWork.AuditLogs.FindAsync(a => a.ProjectId == projectId);
+                    auditLogs = await _unitOfWork.AuditLogs.FindAsNoTrackingAsync(a => a.ProjectId == projectId);
                 }
                 else
                 {
-                    auditLogs = await _unitOfWork.AuditLogs.FindAsync(a =>
+                    auditLogs = await _unitOfWork.AuditLogs.FindAsNoTrackingAsync(a =>
                         a.ProjectId == projectId && a.Timestamp >= startDate);
                 }
 
