@@ -236,8 +236,17 @@ namespace PIDStandardization.UI.Views
 
                 if (_isEditMode && _existingEquipment != null)
                 {
+                    // Reload equipment from current DbContext to avoid tracking conflicts
+                    equipment = await _unitOfWork.Equipment.GetByIdAsync(_existingEquipment.EquipmentId);
+
+                    if (equipment == null)
+                    {
+                        MessageBox.Show("Equipment not found in database.", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
                     // Update existing equipment
-                    equipment = _existingEquipment;
                     equipment.TagNumber = TagNumberTextBox.Text.Trim();
                     equipment.EquipmentType = EquipmentTypeComboBox.Text;
                     equipment.Description = DescriptionTextBox.Text;
