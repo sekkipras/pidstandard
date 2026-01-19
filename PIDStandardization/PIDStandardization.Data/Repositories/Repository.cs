@@ -89,7 +89,20 @@ namespace PIDStandardization.Data.Repositories
             try
             {
                 Log.Debug("Updating {EntityType} entity", _entityTypeName);
-                _dbSet.Update(entity);
+
+                // Check if entity is already being tracked
+                var entry = _context.Entry(entity);
+                if (entry.State == EntityState.Detached)
+                {
+                    // Entity is not tracked, attach and mark as modified
+                    _dbSet.Update(entity);
+                }
+                else
+                {
+                    // Entity is already tracked, just mark as modified
+                    entry.State = EntityState.Modified;
+                }
+
                 Log.Debug("Updated {EntityType} entity successfully", _entityTypeName);
                 return Task.CompletedTask;
             }
