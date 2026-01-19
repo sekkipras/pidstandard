@@ -27,8 +27,16 @@ namespace PIDStandardization.UI.Views
             // Display project info
             ProjectNameTextBlock.Text = project.ProjectName;
 
-            // Load equipment and lines list for association dropdowns
-            LoadEquipmentAndLinesAsync();
+            // Load equipment and lines list for association dropdowns after window is loaded
+            Loaded += InstrumentDialog_Loaded;
+        }
+
+        private async void InstrumentDialog_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Remove event handler to prevent multiple calls
+            Loaded -= InstrumentDialog_Loaded;
+
+            await LoadEquipmentAndLinesAsync();
         }
 
         // Constructor for Edit mode
@@ -71,7 +79,7 @@ namespace PIDStandardization.UI.Views
             }
         }
 
-        private async void LoadEquipmentAndLinesAsync()
+        private async Task LoadEquipmentAndLinesAsync()
         {
             try
             {

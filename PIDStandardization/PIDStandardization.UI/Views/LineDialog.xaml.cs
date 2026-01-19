@@ -27,8 +27,16 @@ namespace PIDStandardization.UI.Views
             // Display project info
             ProjectNameTextBlock.Text = project.ProjectName;
 
-            // Load equipment list for connectivity dropdown
-            LoadEquipmentListAsync();
+            // Load equipment list for connectivity dropdown after window is loaded
+            Loaded += LineDialog_Loaded;
+        }
+
+        private async void LineDialog_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Remove event handler to prevent multiple calls
+            Loaded -= LineDialog_Loaded;
+
+            await LoadEquipmentListAsync();
         }
 
         // Constructor for Edit mode
@@ -68,13 +76,21 @@ namespace PIDStandardization.UI.Views
             LengthTextBox.Text = line.Length?.ToString();
         }
 
-        private async void LoadEquipmentListAsync()
+        private async Task LoadEquipmentListAsync()
         {
-            var allEquipment = await _unitOfWork.Equipment
-                .FindAsync(e => e.ProjectId == _project.ProjectId && e.IsActive);
+            try
+            {
+                var allEquipment = await _unitOfWork.Equipment
+                    .FindAsync(e => e.ProjectId == _project.ProjectId && e.IsActive);
 
-            FromEquipmentComboBox.ItemsSource = allEquipment;
-            ToEquipmentComboBox.ItemsSource = allEquipment;
+                FromEquipmentComboBox.ItemsSource = allEquipment;
+                ToEquipmentComboBox.ItemsSource = allEquipment;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading equipment: {ex.Message}\n\nYou can still add the line, but connectivity dropdowns will be empty.",
+                    "Load Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private async void Save_Click(object sender, RoutedEventArgs e)
